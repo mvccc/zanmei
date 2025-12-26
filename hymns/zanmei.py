@@ -17,8 +17,8 @@ from hanziconv import HanziConv
 from hymns import fetch
 
 # 教會聖詩 Hymns for God's People
-HYMNS_INDEX_URL = "https://www.zanmeishi.com/songbook/hymns-for-gods-people.html"
-ZANMEI_HOMEPAGE = "https://www.zanmeishi.com"
+HYMNS_INDEX_URL = "https://www.izanmei.cc/songbook/hymns-for-gods-people.html"
+ZANMEI_HOMEPAGE = "https://www.izanmei.cc"
 
 FLAGS = flags.FLAGS
 
@@ -55,11 +55,24 @@ async def index(session: ClientSession, url: str, download_basepath: Optional[Pa
 
     text = content.decode()
     soup = BeautifulSoup(text, "html.parser")
-    div = soup.find("div", attrs={"class": "sbtablist"})
+    # New website structure: <li>第X首 <a href="/tab/XXX.html?songbook=1&index=X" ...>name</a>
     hymns = []
-    for li in div.findAll("li"):
-        no = re.search(r"\d+", li.text).group()
-        name = li.a["title"].replace("查看歌谱", "")
+    for li in soup.find_all("li"):
+        # Look for pattern: "第X首" followed by a link
+        if "第" not in li.text or "首" not in li.text:
+            continue
+        a = li.find("a")
+        if not a or "songbook=" not in a.get("href", ""):
+            continue
+
+        # Extract hymn number from text like "第1首"
+        no_match = re.search(r"第(\d+)首", li.text)
+        if not no_match:
+            continue
+        no = int(no_match.group(1))
+
+        # Get hymn name from link text
+        name = a.text.strip()
         name = (
             HanziConv.toTraditional(name)
             .replace("傢", "家")
@@ -80,7 +93,10 @@ async def index(session: ClientSession, url: str, download_basepath: Optional[Pa
             .replace("籍我", "藉我")
             .replace("神跡", "神蹟")
         )
-        hymn = Hymn(name=name, no=int(no), url=f"{ZANMEI_HOMEPAGE}{li.a['href']}")
+
+        # Extract the base URL without query parameters for compatibility
+        href = a["href"].split("?")[0]
+        hymn = Hymn(name=name, no=no, url=f"{ZANMEI_HOMEPAGE}{href}")
         hymns.append(hymn)
 
     return hymns
@@ -94,17 +110,27 @@ async def download(session: ClientSession, hymn: Hymn) -> None:
     log.debug(f"downloading to {_path(hymn)} ...")
     try:
         status, content = await fetch(session, hymn.url)
-        assert status == 200
+        assert status == 200, f"Failed to fetch hymn page: {status}"
         text = content.decode()
         soup = BeautifulSoup(text, "html.parser")
+
+        # New website structure: <div class="img_tab"><a><img src="URL"></a></div>
         div = soup.find("div", attrs={"class": "img_tab"})
-        img_url = div.a["href"]
+        assert div is not None, "Could not find img_tab div"
+
+        img = div.find("img")
+        assert img is not None, "Could not find img tag"
+
+        img_url = img["src"]
+        log.debug(f"Fetching image from {img_url}")
+
         status, content = await fetch(session, img_url)
-        assert status == 200
+        assert status == 200, f"Failed to fetch image: {status}"
+
         with _path(hymn).open("wb") as f:
             f.write(content)
-    except AssertionError:
-        log.exception(f"failed to download {_path(hymn)}")
+    except Exception as e:
+        log.exception(f"failed to download {_path(hymn)}: {e}")
 
 
 def verify(path: Path, glob: str, total: int) -> None:
@@ -125,8 +151,8 @@ async def download_image_copy(download_basepath: Optional[Path] = None) -> None:
 
     async with ClientSession() as session:
         hymns = await index(session, HYMNS_INDEX_URL)
-        tasks = [download(session, hymn) for hymn in hymns]
-        await asyncio.wait(tasks)
+        tasks = [asyncio.create_task(download(session, hymn)) for hymn in hymns]
+        await asyncio.gather(*tasks)
         verify(download_basepath, "*.png", len(hymns))
 
 
