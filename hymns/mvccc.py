@@ -103,7 +103,6 @@ if __name__ == "__main__":
         download_basepath = Path(FLAGS.download_basedir)
         download_basepath.mkdir(exist_ok=True, parents=True)
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(download_pptx())
+        asyncio.run(download_pptx())
 
     app.run(main)

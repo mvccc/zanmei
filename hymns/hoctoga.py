@@ -148,7 +148,6 @@ if __name__ == "__main__":
         processed_basepath = Path(FLAGS.processed_basedir)
         processed_basepath.mkdir(exist_ok=True, parents=True)
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(process_all_hymns())
+        asyncio.run(process_all_hymns())
 
     app.run(main)

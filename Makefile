@@ -1,7 +1,7 @@
 SHELL = /bin/bash
 
 ifndef VIRTUAL_ENV
-WITH_VENV := poetry run
+WITH_VENV := uv run
 else
 WITH_VENV :=
 endif
@@ -78,7 +78,7 @@ else
 endif
 
 streamlit-slides:
-	$(WITH_VENV) streamlit run     \
+	uv run streamlit run         \
 	  --server.port=8501           \
 	  mvccc/slidesapp.py           \
 	  --server.baseUrlPath=slides  \
@@ -86,10 +86,10 @@ streamlit-slides:
 	  # https://github.com/streamlit/streamlit/issues/521
 
 ipykernel:
-	$(WITH_VENV) python -m ipykernel install --user --name zanmei --display-name "python(zanmei)"
+	uv run python -m ipykernel install --user --name zanmei --display-name "python(zanmei)"
 
 notebook: ipykernel
-	$(WITH_VENV) jupyter notebook            \
+	uv run jupyter notebook              \
 	  --NotebookApp.open_browser=False       \
 	  --NotebookApp.port=8088                \
 	  --NotebookApp.base_url='/notebook/'    \
@@ -97,7 +97,7 @@ notebook: ipykernel
 	# END
 
 jupyter:
-	$(WITH_VENV) jupyter notebook
+	uv run jupyter notebook
 
 #-------------------------------------------------------------------------------
 VERSES := 約翰福音3:16
@@ -128,22 +128,18 @@ test_%.py: FORCE
 
 .PHONY: ipython
 ipython:
-	poetry run ipython
+	uv run ipython
 
-.PHONY: install-poetry
-install-poetry:
-	$$(command -v poetry) || pip install poetry
+.PHONY: install-uv
+install-uv:
+	$$(command -v uv) || pip install uv
 
-.PHONY: poetry-config
-poetry-config:
-	poetry config settings.virtualenvs.in-project true
+.PHONY: uv-sync
+uv-sync:
+	uv sync
 
-.PHONY: poetry-install
-poetry-install: poetry-config
-	poetry install
+.PHONY: uv-lock
+uv-lock:
+	uv lock
 
-.PHONY: poetry-update
-poetry-update: poetry-config
-	poetry update
-
-init: install-poetry poetry-update download
+init: install-uv uv-sync download

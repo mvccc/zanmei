@@ -1,30 +1,36 @@
-[tool.poetry]
+[project]
 name = "hymns"
 version = "0.5.0"
 description = "Download all resources for 'Hymns for God's People'"
-authors = ["Dyno Fu <dyno.fu@gmail.com>"]
+authors = [{name = "Dyno Fu", email = "dyno.fu@gmail.com"}]
+requires-python = ">=3.8"
+dependencies = [
+    "absl-py",
+    "aiodns",
+    "aiohttp",
+    "attrs",
+    "beautifulsoup4",
+    "cattrs",
+    "charset-normalizer",
+    "hanziconv",
+    "lxml",
+    "pandas",
+    "python-pptx",
+    "requests",
+    "streamlit>=0.49.0",
+    "tqdm",
+]
 
-[tool.poetry.dependencies]
-python = "^3.6"
-absl-py = "*"
-aiodns = "*"
-aiohttp = "*"
-attrs = "*"
-beautifulsoup4 = "*"
-cattrs = "*"
-cchardet = "*"
-hanziconv = "*"
-lxml = "*"
-pandas = "*"
-python-pptx = "*"
-requests = "*"
-streamlit = ">=0.49.0"
-tqdm = "*"
+[project.optional-dependencies]
+dev = [
+    "ipython",
+    "jupyter",
+    "pytest",
+]
 
-[tool.poetry.dev-dependencies]
-ipython = "*"
-jupyter = "*"
-pytest = "*"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.black]
 line-length = 120

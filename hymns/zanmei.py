@@ -140,7 +140,6 @@ if __name__ == "__main__":
         download_basepath.mkdir(exist_ok=True, parents=True)
         initialize_logging()
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(download_image_copy())
+        asyncio.run(download_image_copy())
 
     app.run(main)
