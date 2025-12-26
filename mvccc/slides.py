@@ -9,6 +9,7 @@ from typing import Dict, Generator, List, Tuple
 
 import attr
 from pptx import Presentation
+from pptx.enum.shapes import PP_PLACEHOLDER
 
 from absl import app, flags, logging as log
 from bible.index import parse_citations
@@ -63,17 +64,42 @@ def extract_slides_text(ppt: Presentation) -> Generator[Tuple[int, List[List[str
 
 
 # ------------------------------------------------------------------------------
-# Layout mapping for worship.pptx
-# Old mvccc_master.pptx had custom layouts 0-7
-# New worship.pptx layout indices:
-LAYOUT_PRELUDE = 1      # Title & Photo (has image placeholder)
-LAYOUT_MESSAGE = 19     # Title and Content
-LAYOUT_HYMN = 3         # Title & Bullets
-LAYOUT_SCRIPTURE = 19   # Title and Content
-LAYOUT_MEMORIZE = 19    # Title and Content
-LAYOUT_TEACHING = 19    # Title and Content
-LAYOUT_SECTION = 6      # Section
-LAYOUT_BLANK = 14       # Blank
+# 
+LAYOUT_NAME_PRELUDE = ("prelude",)
+LAYOUT_NAME_MESSAGE = ("message",)
+LAYOUT_NAME_HYMN = ("hymn",)
+LAYOUT_NAME_SCRIPTURE = ("verse",)
+LAYOUT_NAME_MEMORIZE = ("memorize",)
+LAYOUT_NAME_TEACHING = ("teaching",)
+LAYOUT_NAME_SECTION = ("section",)
+LAYOUT_NAME_BLANK = ("blank",)
+
+
+def _get_slide_layout(ppt: Presentation, layout_names: Tuple[str, ...]):
+    normalized = {n.strip().lower() for n in layout_names}
+    for layout in ppt.slide_layouts:
+        if layout.name and layout.name.strip().lower() in normalized:
+            return layout
+    available = [layout.name for layout in ppt.slide_layouts]
+    raise ValueError(f"Could not find slide layout in {layout_names}. Available layouts: {available}")
+
+
+def _get_placeholder_by_type(container, placeholder_types: Tuple[PP_PLACEHOLDER, ...]):
+    for placeholder in container.placeholders:
+        pf = getattr(placeholder, "placeholder_format", None)
+        ptype = getattr(pf, "type", None)
+        if ptype is None:
+            continue
+        if any(ptype == t for t in placeholder_types):
+            return placeholder
+    available = []
+    for placeholder in container.placeholders:
+        pf = getattr(placeholder, "placeholder_format", None)
+        ptype = getattr(pf, "type", None)
+        if ptype is None:
+            continue
+        available.append(ptype)
+    raise ValueError(f"Could not find placeholder types {placeholder_types}. Available placeholder types: {available}")
 
 
 @attr.s
@@ -82,11 +108,9 @@ class Prelude:
     picture: str = attr.ib()
 
     def add_to(self, ppt: Presentation, padding="\u3000\u3000") -> Presentation:
-        slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_PRELUDE])
-        # Layout 1 (Title & Photo): idx 0=title, 1=body, 21=image
-        title = slide.placeholders[0]
-        body = slide.placeholders[1]
-        picture = slide.placeholders[21]
+        slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_PRELUDE))
+        title = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
+        picture = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.PICTURE, PP_PLACEHOLDER.OBJECT))
 
         title.text = padding + self.message
         picture.insert_picture(self.picture)
@@ -99,9 +123,8 @@ class Message:
     message: str = attr.ib()
 
     def add_to(self, ppt: Presentation, padding="\u3000\u3000") -> Presentation:
-        slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MESSAGE])
-        # Layout 19 (Title and Content): idx 0=title, 1=body
-        body = slide.placeholders[1]
+        slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_MESSAGE))
+        body = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
         body.text = padding + self.message
 
         return ppt
@@ -114,10 +137,9 @@ class Hymn:
 
     def add_to(self, ppt: Presentation, padding: str = " ") -> Presentation:
         for _, (title, paragraph) in self.lyrics:
-            slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_HYMN])
-            # Layout 3 (Title & Bullets): idx 0=title, 1=body
-            title_holder = slide.placeholders[0]
-            paragraph_holder = slide.placeholders[1]
+            slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN))
+            title_holder = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
+            paragraph_holder = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
             title_holder.text = title[0]
             # XXX: workaround alignment problem
             paragraph[0] = padding + paragraph[0]
@@ -184,10 +206,9 @@ class Section:
     title: str = attr.ib()
 
     def add_to(self, ppt: Presentation) -> Presentation:
-        slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_SECTION])
-        # Layout 6 (Section): idx 0=title
-        title = slide.placeholders[0]
-        title.text = self.title
+        slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_SECTION))
+        title_ph = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
+        title_ph.text = self.title
 
         return ppt
 
@@ -201,11 +222,10 @@ class Scripture:
         for cite, verses in self.cite_verses.items():
             for idx, bv in enumerate(verses):
                 if idx % 2 == 0:
-                    slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_SCRIPTURE])
-                    # Layout 19 (Title and Content): idx 0=title, 1=body
-                    title = slide.placeholders[0]
-                    message = slide.placeholders[1]
-                    title.text = cite
+                    slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_SCRIPTURE))
+                    title_ph = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
+                    message = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
+                    title_ph.text = cite
                     message.text = ""
                 message.text += (padding if idx % 2 == 0 else "\n") + f"{bv.verse}\u3000{bv.text}"
 
@@ -227,11 +247,10 @@ class Memorize:
     verses: List[BibleVerse] = attr.ib()
 
     def add_to(self, ppt: Presentation, padding="\u3000\u3000") -> Presentation:
-        slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MEMORIZE])
-        # Layout 19 (Title and Content): idx 0=title, 1=body
-        title = slide.placeholders[0]
-        message = slide.placeholders[1]
-        title.text = "本週金句"
+        slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_MEMORIZE))
+        title_ph = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
+        message = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
+        title_ph.text = "本週金句"
         message.text = padding + "".join(bv.text for bv in self.verses) + f"\n\n{self.citation:>35}"
 
         return ppt
@@ -244,11 +263,10 @@ class Teaching:
     messenger: str = attr.ib()
 
     def add_to(self, ppt: Presentation) -> Presentation:
-        slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_TEACHING])
-        # Layout 19 (Title and Content): idx 0=title, 1=body
-        title = slide.placeholders[0]
-        body = slide.placeholders[1]
-        title.text = self.title
+        slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_TEACHING))
+        title_ph = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
+        body = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
+        title_ph.text = self.title
         body.text = f"{self.message}\n\n{self.messenger}"
 
         return ppt
@@ -257,7 +275,7 @@ class Teaching:
 @attr.s
 class Blank:
     def add_to(self, ppt: Presentation) -> Presentation:
-        _ = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_BLANK])
+        _ = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_BLANK))
 
         return ppt
 
