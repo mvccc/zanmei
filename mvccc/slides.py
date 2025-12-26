@@ -16,7 +16,7 @@ from bible.scripture import BibleVerse, scripture
 
 flags.DEFINE_bool("extract_only", False, "extract text from pptx")
 flags.DEFINE_string("pptx", "", "The pptx")
-flags.DEFINE_string("master_pptx", "mvccc_master.pptx", "The template pptx")
+flags.DEFINE_string("master_pptx", "worship.pptx", "The template pptx")
 
 flags.DEFINE_string("choir", "", "The hymn by choir")
 flags.DEFINE_multi_string("hymns", [], "The hymns by congregation")
@@ -62,15 +62,17 @@ def extract_slides_text(ppt: Presentation) -> Generator[Tuple[int, List[List[str
 
 
 # ------------------------------------------------------------------------------
-
-LAYOUT_PRELUDE = 0
-LAYOUT_MESSAGE = 1
-LAYOUT_HYMN = 2
-LAYOUT_SCRIPTURE = 3
-LAYOUT_MEMORIZE = 4
-LAYOUT_TEACHING = 5
-LAYOUT_SECTION = 6
-LAYOUT_BLANK = 7
+# Layout mapping for worship.pptx
+# Old mvccc_master.pptx had custom layouts 0-7
+# New worship.pptx layout indices:
+LAYOUT_PRELUDE = 1      # Title & Photo (has image placeholder)
+LAYOUT_MESSAGE = 19     # Title and Content
+LAYOUT_HYMN = 3         # Title & Bullets
+LAYOUT_SCRIPTURE = 19   # Title and Content
+LAYOUT_MEMORIZE = 19    # Title and Content
+LAYOUT_TEACHING = 19    # Title and Content
+LAYOUT_SECTION = 6      # Section
+LAYOUT_BLANK = 14       # Blank
 
 
 @attr.s
@@ -80,8 +82,12 @@ class Prelude:
 
     def add_to(self, ppt: Presentation, padding="\u3000\u3000") -> Presentation:
         slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_PRELUDE])
-        message, picture = slide.placeholders
-        message.text = padding + self.message
+        # Layout 1 (Title & Photo): idx 0=title, 1=body, 21=image
+        title = slide.placeholders[0]
+        body = slide.placeholders[1]
+        picture = slide.placeholders[21]
+
+        title.text = padding + self.message
         picture.insert_picture(self.picture)
 
         return ppt
@@ -93,8 +99,9 @@ class Message:
 
     def add_to(self, ppt: Presentation, padding="\u3000\u3000") -> Presentation:
         slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MESSAGE])
-        (message,) = slide.placeholders
-        message.text = padding + self.message
+        # Layout 19 (Title and Content): idx 0=title, 1=body
+        body = slide.placeholders[1]
+        body.text = padding + self.message
 
         return ppt
 
@@ -107,7 +114,9 @@ class Hymn:
     def add_to(self, ppt: Presentation, padding: str = " ") -> Presentation:
         for _, (title, paragraph) in self.lyrics:
             slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_HYMN])
-            title_holder, paragraph_holder = slide.placeholders
+            # Layout 3 (Title & Bullets): idx 0=title, 1=body
+            title_holder = slide.placeholders[0]
+            paragraph_holder = slide.placeholders[1]
             title_holder.text = title[0]
             # XXX: workaround alignment problem
             paragraph[0] = padding + paragraph[0]
@@ -163,7 +172,8 @@ class Section:
 
     def add_to(self, ppt: Presentation) -> Presentation:
         slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_SECTION])
-        (title,) = slide.placeholders
+        # Layout 6 (Section): idx 0=title
+        title = slide.placeholders[0]
         title.text = self.title
 
         return ppt
@@ -179,8 +189,11 @@ class Scripture:
             for idx, bv in enumerate(verses):
                 if idx % 2 == 0:
                     slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_SCRIPTURE])
-                title, message = slide.placeholders
-                title.text = cite
+                    # Layout 19 (Title and Content): idx 0=title, 1=body
+                    title = slide.placeholders[0]
+                    message = slide.placeholders[1]
+                    title.text = cite
+                    message.text = ""
                 message.text += (padding if idx % 2 == 0 else "\n") + f"{bv.verse}\u3000{bv.text}"
 
         return ppt
@@ -202,7 +215,9 @@ class Memorize:
 
     def add_to(self, ppt: Presentation, padding="\u3000\u3000") -> Presentation:
         slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MEMORIZE])
-        title, message = slide.placeholders
+        # Layout 19 (Title and Content): idx 0=title, 1=body
+        title = slide.placeholders[0]
+        message = slide.placeholders[1]
         title.text = "本週金句"
         message.text = padding + "".join(bv.text for bv in self.verses) + f"\n\n{self.citation:>35}"
 
@@ -217,8 +232,11 @@ class Teaching:
 
     def add_to(self, ppt: Presentation) -> Presentation:
         slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_TEACHING])
-        (message,) = slide.placeholders
-        message.text = "\n\n".join([self.title, self.message, self.messenger])
+        # Layout 19 (Title and Content): idx 0=title, 1=body
+        title = slide.placeholders[0]
+        body = slide.placeholders[1]
+        title.text = self.title
+        body.text = f"{self.message}\n\n{self.messenger}"
 
         return ppt
 
