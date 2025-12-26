@@ -149,7 +149,19 @@ def search_hymn_ppt(keyword: str, basepath: Path = None) -> List[Hymn]:
                     if found:
                         break
 
-    assert found, f"can not find anything match {ptn}."
+    if not found:
+        # Create a placeholder hymn with title and empty slide
+        log.warning(f"can not find anything match {ptn}. Creating placeholder slides.")
+        # Create a simple hymn structure: title slide + empty slide
+        placeholder_hymn = Hymn(
+            filename=keyword,
+            lyrics=[
+                (0, [[keyword], ["(歌詞待補充)"]]),
+                (1, [[""], [""]])
+            ]
+        )
+        return [placeholder_hymn]
+
     if len(found) > 1:
         log.warn(f"found more than 1 files for {ptn}. {[p.as_posix() for p in found]}")
 
