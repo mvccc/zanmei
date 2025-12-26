@@ -274,7 +274,7 @@ def mvccc_slides(
     communion: bool,
 ) -> List:
     slides = [
-        Prelude("請儘量往前或往中間坐,並將手機關閉或關至靜音,預備心敬拜！", "silence_phone1.png"),
+        Message("請儘量往前或往中間坐,並將手機關閉或關至靜音,預備心敬拜！"),
         Message(
             """惟耶和華在他的聖殿中；全地的人，都當在他面前肅敬靜默。
 
