@@ -54,9 +54,10 @@ def extract_slides_text(ppt: Presentation) -> Generator[Tuple[int, List[List[str
             paragraph_text_list: List[str] = []
             for paragraph in shape.text_frame.paragraphs:
                 paragraph_text_list.append("".join(run.text.replace("\xa0", " ").strip() for run in paragraph.runs))
-            while not paragraph_text_list[-1]:
+            while paragraph_text_list and not paragraph_text_list[-1]:
                 paragraph_text_list.pop()
-            shape_text_list.append(paragraph_text_list)
+            if paragraph_text_list:  # Only add non-empty lists
+                shape_text_list.append(paragraph_text_list)
 
         yield idx, shape_text_list
 
@@ -335,7 +336,15 @@ def mvccc_slides(
 
 
 def to_pptx(slides: List, master_slide: Presentation) -> Presentation:
-    ppt = master_slide
+    # Create a new presentation using the master template's layouts
+    # but without any of the master's existing slides
+    ppt = Presentation(FLAGS.master_pptx)
+
+    # Remove all existing slides from the template
+    while len(ppt.slides) > 0:
+        rId = ppt.slides._sldIdLst[0].rId
+        ppt.part.drop_rel(rId)
+        del ppt.slides._sldIdLst[0]
 
     for slide in slides:
         slide.add_to(ppt)
