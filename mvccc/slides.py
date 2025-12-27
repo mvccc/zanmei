@@ -186,7 +186,7 @@ def search_hymn_ppt(keyword: str, basepath: Path = None) -> List[Hymn]:
         return [placeholder_hymn]
 
     if len(found) > 1:
-        log.warn(f"found more than 1 files for {ptn}. {[p.as_posix() for p in found]}")
+        log.warning(f"found more than 1 files for {ptn}. {[p.as_posix() for p in found]}")
 
     found = [path for path in found if path.stem == keyword] + [path for path in found if path.stem != keyword]
 
