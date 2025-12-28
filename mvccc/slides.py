@@ -136,13 +136,24 @@ class Hymn:
     lyrics: List[Tuple[str, List[str]]] = attr.ib()  # List[title, paragraph]
 
     def add_to(self, ppt: Presentation, padding: str = " ") -> Presentation:
-        for _, (title, paragraph) in self.lyrics:
+        for _, slide_content in self.lyrics:
+            # Handle both cases: [title_list, paragraph_list] or [combined_list]
+            if len(slide_content) == 2:
+                title, paragraph = slide_content
+            elif len(slide_content) == 1:
+                # If only one list, treat it as paragraph with empty title
+                title = [""]
+                paragraph = slide_content[0]
+            else:
+                raise ValueError(f"Unexpected slide_content structure: {slide_content}")
+
             slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN))
             title_holder = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
             paragraph_holder = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
             title_holder.text = title[0]
             # XXX: workaround alignment problem
-            paragraph[0] = padding + paragraph[0]
+            if paragraph:
+                paragraph[0] = padding + paragraph[0]
             paragraph_holder.text = "\n".join(paragraph)
 
         return ppt
