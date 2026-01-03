@@ -6,12 +6,14 @@ from typing import Dict, List, NamedTuple
 # defined for search
 class VerseLoc(NamedTuple):
     "Location of a verse within a book"
+
     chapter: int
     verse: int
 
 
 class Citation(NamedTuple):
     "Uninterrupted paragraph of scripture, may cross the boundary of chapter"
+
     start: VerseLoc
     end: VerseLoc
 
@@ -69,17 +71,11 @@ def parse_citations(citations: str) -> Dict[str, BookCitations]:
             else:
                 start, end = parts
                 start_parts = list(map(int, start.split(":")))
-                if len(start_parts) == 1:
-                    start_chapter = prev_chapter
-                else:
-                    start_chapter = start_parts[0]
+                start_chapter = prev_chapter if len(start_parts) == 1 else start_parts[0]
                 start_verse = start_parts[-1]
 
                 end_parts = list(map(int, end.split(":")))
-                if len(end_parts) == 1:
-                    end_chapter = start_chapter
-                else:
-                    end_chapter = end_parts[0]
+                end_chapter = start_chapter if len(end_parts) == 1 else end_parts[0]
                 prev_chapter = end_chapter
                 end_verse = int(end_parts[-1])
 

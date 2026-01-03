@@ -135,7 +135,7 @@ async def download(session: ClientSession, hymn: Hymn) -> None:
 
 def verify(path: Path, glob: str, total: int) -> None:
     path_list = list(path.glob(glob))
-    downloaded = list(sorted(path.name.split("_", 1)[0] for path in path_list))
+    downloaded = sorted(path.name.split("_", 1)[0] for path in path_list)
     expected = [f"{no:03d}" for no in range(1, total + 1)]
     missing = ["493", "494", "495"]
     log.warn(f"{missing} are missing from {HYMNS_INDEX_URL}. they are all in 492.")

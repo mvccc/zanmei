@@ -8,10 +8,10 @@ from pprint import pformat
 from typing import Dict, Generator, List, Tuple
 
 import attr
+from absl import app, flags, logging as log
 from pptx import Presentation
 from pptx.enum.shapes import PP_PLACEHOLDER
 
-from absl import app, flags, logging as log
 from bible.index import parse_citations
 from bible.scripture import BibleVerse, scripture
 
@@ -64,7 +64,7 @@ def extract_slides_text(ppt: Presentation) -> Generator[Tuple[int, List[List[str
 
 
 # ------------------------------------------------------------------------------
-# 
+#
 LAYOUT_NAME_PRELUDE = ("prelude",)
 LAYOUT_NAME_MESSAGE = ("message",)
 LAYOUT_NAME_HYMN = ("hymn",)
@@ -187,13 +187,7 @@ def search_hymn_ppt(keyword: str, basepath: Path = None) -> List[Hymn]:
         # Create a placeholder hymn with title and empty slide
         log.warning(f"can not find anything match {ptn}. Creating placeholder slides.")
         # Create a simple hymn structure: title slide + empty slide
-        placeholder_hymn = Hymn(
-            filename=keyword,
-            lyrics=[
-                (0, [[keyword], ["(歌詞待補充)"]]),
-                (1, [[""], [""]])
-            ]
-        )
+        placeholder_hymn = Hymn(filename=keyword, lyrics=[(0, [[keyword], ["(歌詞待補充)"]]), (1, [[""], [""]])])
         return [placeholder_hymn]
 
     if len(found) > 1:
@@ -371,8 +365,8 @@ def to_pptx(slides: List, master_slide: Presentation) -> Presentation:
 
     # Remove all existing slides from the template
     while len(ppt.slides) > 0:
-        rId = ppt.slides._sldIdLst[0].rId
-        ppt.part.drop_rel(rId)
+        r_id = ppt.slides._sldIdLst[0].rId
+        ppt.part.drop_rel(r_id)
         del ppt.slides._sldIdLst[0]
 
     for slide in slides:
@@ -390,8 +384,8 @@ def main(argv):
     if FLAGS.extract_only:
         ppt = Presentation(FLAGS.pptx)
 
-        for idx, text in extract_slides_text(ppt):
-            print(f"{idx+1:02d} {text}")
+        for _idx, _text in extract_slides_text(ppt):
+            pass
         return
 
     slides = mvccc_slides(

@@ -59,7 +59,7 @@ if keyword.strip():
 
 hymns = []
 for i in range(4):
-    label = f"敬拜赞美 - {i+1}"
+    label = f"敬拜赞美 - {i + 1}"
     keyword = st.text_input(label, "耶和華")
     if keyword.strip():
         picked = pick_hymn(keyword, label)

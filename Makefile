@@ -118,7 +118,25 @@ scripture_compare:
 #-------------------------------------------------------------------------------
 # development related
 
-test:
+#-------------------------------------------------------------------------------
+# code quality
+
+.PHONY: format
+format:
+	$(PYTHON) -m ruff format .
+
+.PHONY: lint
+lint:
+	$(PYTHON) -m ruff check .
+
+.PHONY: fix
+fix:
+	$(PYTHON) -m ruff check --fix .
+
+.PHONY: check
+check: lint test
+
+test: lint
 	$(PYTHON) -m pytest --capture=no --verbose
 
 # Run individual unittest file, e.g.

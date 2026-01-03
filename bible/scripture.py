@@ -124,7 +124,7 @@ def from_bible_cloud(filename: str) -> Bible:
             # <aside epub:type='footnote' id="FN33"><p class="f">
             #   <a class="notebackref" href="#MT23_13"><span class="notemark">*</span> 23:13:</a>
             #   <span class="ft">有古卷加：</span>
-            #   <span class="fv">14你們這假冒為善的文士和法利賽人有禍了！因為你們侵吞寡婦的家產，假意做很長的禱告，所以要受更重的刑罰。</span>
+            #   <span class="fv">14你們這假冒為善的文士和法利賽人有禍了！因為你們侵吞寡婦的家產，假意做很長的禱告，所以要受更重的刑罰。</span>  # noqa: E501
             # </p></aside>
 
             ft_notes: Dict[str, List[str]] = defaultdict(list)
@@ -138,7 +138,7 @@ def from_bible_cloud(filename: str) -> Bible:
                 if ft:
                     ft_notes[chv].append(ft.text)
 
-                # <span class="fv">14你們這假冒為善的文士和法利賽人有禍了！因為你們侵吞寡婦的家產，假意做很長的禱告，所以要受更重的刑罰。</span>
+                # <span class="fv">14你們這假冒為善的文士和法利賽人有禍了！因為你們侵吞寡婦的家產，假意做很長的禱告，所以要受更重的刑罰。</span>  # noqa: E501
                 fv = aside.find("span", class_="fv")
                 if fv:
                     # move note to the new verse.
@@ -159,6 +159,8 @@ def from_bible_cloud(filename: str) -> Bible:
                 return BibleVerse(book, chapter, verse, text)
 
             collector: List[str] = []
+            chapter = 0  # Will be set on first verse encounter
+            verse = 0  # Will be set on first verse encounter
             for div in book_root.find_all("div", class_=lambda klass: klass in ["p", "q", "m"]):
                 for c in div.children:
                     try:
@@ -170,7 +172,7 @@ def from_bible_cloud(filename: str) -> Bible:
                                 # XXX: chapter, verse is from last round, so don't worry about the mypy warning.
                                 yield to_bible_verse(book, chapter, verse, "".join(collector), ft_notes)
                                 # check if next verse is a foot note.
-                                next_chv = f"{chapter}:{verse+1}"
+                                next_chv = f"{chapter}:{verse + 1}"
                                 if next_chv in ft_verses:
                                     text = f"（{ft_verses[next_chv]}）"
                                     yield to_bible_verse(book, chapter, verse + 1, text, ft_notes)
@@ -205,7 +207,7 @@ def from_bible_cloud(filename: str) -> Bible:
     return Bible("上帝", df)
 
 
-@lru_cache()
+@lru_cache
 def scripture(filename=None, source=None) -> Bible:
     if filename is None:
         filename = FLAGS.bible_text
@@ -222,10 +224,8 @@ if __name__ == "__main__":
         book_citation_list = list(parse_citations(FLAGS.bible_citations).items())
         bible = scripture()
         result = bible.search(book_citation_list)
-        for loc, verses in result.items():
-            print(loc)
-            for v in verses:
-                print(f"{v.verse:>3d} {v.text}")
-            print()
+        for _loc, verses in result.items():
+            for _v in verses:
+                pass
 
     app.run(main)

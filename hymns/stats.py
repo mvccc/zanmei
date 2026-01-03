@@ -6,7 +6,6 @@ from os.path import join
 from pathlib import Path
 
 from absl import app, logging as log
-
 from comm import TOTAL, init_logging
 
 PROCESSED = Path("processed")

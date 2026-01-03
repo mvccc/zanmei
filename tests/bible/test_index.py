@@ -1,7 +1,5 @@
 from collections import OrderedDict
 
-import pytest
-
 from bible.index import BookCitations, Citation, VerseLoc, parse_citations
 
 
@@ -10,7 +8,12 @@ def test_parse_citations():
     # and then you can do search like 3:10-4:9
     r = parse_citations("撒母耳記上 17:31-49")  # 2019-02-24
     assert r == OrderedDict(
-        [("撒母耳記上17:31-49", BookCitations(book="撒母耳記上", citations=[Citation(VerseLoc(17, 31), VerseLoc(17, 49))]))]
+        [
+            (
+                "撒母耳記上17:31-49",
+                BookCitations(book="撒母耳記上", citations=[Citation(VerseLoc(17, 31), VerseLoc(17, 49))]),
+            )
+        ]
     )
 
     r = parse_citations("哥林多前書 6:12-13;10:23-24、31")  # 2019-03-03
