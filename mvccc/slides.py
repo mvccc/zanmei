@@ -109,7 +109,11 @@ class Prelude:
 
     def add_to(self, ppt: Presentation, padding="\u3000\u3000") -> Presentation:
         slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_PRELUDE))
-        title = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
+        # Try TITLE first, fall back to BODY if not available
+        try:
+            title = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
+        except ValueError:
+            title = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
         picture = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.PICTURE, PP_PLACEHOLDER.OBJECT))
 
         title.text = padding + self.message
@@ -212,7 +216,11 @@ class Section:
 
     def add_to(self, ppt: Presentation) -> Presentation:
         slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_SECTION))
-        title_ph = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
+        # Try TITLE first, fall back to BODY if not available
+        try:
+            title_ph = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
+        except ValueError:
+            title_ph = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
         title_ph.text = self.title
 
         return ppt
@@ -270,9 +278,14 @@ class Teaching:
     def add_to(self, ppt: Presentation) -> Presentation:
         slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_TEACHING))
         title_ph = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
-        body = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
-        title_ph.text = self.title
-        body.text = f"{self.message}\n\n{self.messenger}"
+        # Try to get BODY, if not available, put all content in title
+        try:
+            body = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
+            title_ph.text = self.title
+            body.text = f"{self.message}\n\n{self.messenger}"
+        except ValueError:
+            # No BODY placeholder, combine all in title
+            title_ph.text = f"{self.title}\n{self.message}\n{self.messenger}"
 
         return ppt
 
