@@ -73,14 +73,12 @@ make download
 
 # Download from specific sources
 make zanmei      # izanmei.cc - Primary source for "Hymns for God's People"
-make hoctoga     # hoctoga.org
 make hoc5        # hoc5.net
 make mvccc       # mvccc.org church resources
 ```
 
 **Output locations:**
 - `download/zanmei/` - PNG images of hymn sheets
-- `download/hoctoga/` - Hymn resources
 - `download/hoc5/` - Hymn resources
 - `download/mvccc/` - Church-specific resources
 

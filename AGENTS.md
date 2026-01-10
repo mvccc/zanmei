@@ -49,7 +49,6 @@ zanmei/
 │   └── scripture.py # Bible verse fetching from multiple sources
 ├── hymns/           # Hymn downloading modules
 │   ├── zanmei.py    # zanmei.cc scraper
-│   ├── hoctoga.py   # hoctoga.org scraper
 │   ├── hoc5.py      # hoc5.net scraper
 │   ├── mvccc.py     # mvccc.org scraper
 │   └── stats.py     # Hymn usage statistics
@@ -115,7 +114,6 @@ make download
 
 # Download from specific source
 make zanmei
-make hoctoga
 make hoc5
 make mvccc
 ```
@@ -232,7 +230,6 @@ Hymns can be specified as:
 
 The project relies on external websites for hymn data:
 - **zanmei.cc** (`https://www.izanmei.cc`) - Primary hymn source
-- **hoctoga.org** - Alternative hymn lyrics
 - **hoc5.net** - Hymn audio/resources
 - **mvccc.org** - Church-specific resources
 

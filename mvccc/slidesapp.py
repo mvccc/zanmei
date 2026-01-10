@@ -17,9 +17,7 @@ FLAGS(["streamlit"])
 
 def pick_hymn(keyword: str, label: str) -> Hymn:
     hymns = search_hymn_ppt(keyword=keyword)
-    hymn = st.radio(
-        "", hymns, index=0, format_func=lambda h: h.filename, key=hashlib.md5(label.encode("utf-8")).hexdigest()
-    )
+    hymn = st.radio("", hymns, index=0, format_func=lambda h: h.filename, key=hashlib.md5(label.encode("utf-8")).hexdigest())
     sio = StringIO()
     for _, (title, lines) in hymn.lyrics:
         sio.write(f"\n#{title[0].strip('#')}\n")

@@ -24,9 +24,7 @@ def test_bible_basics():
     assert len(set(bn.df.index.get_level_values(0))) == 66
 
     df = pd.merge(bc.df, bn.df, left_index=True, right_index=True, how="outer", suffixes=("_cloud", "_net"))
-    with pd.option_context(
-        "display.unicode.east_asian_width", True, "display.max_colwidth", 50, "display.max_rows", 10000
-    ):
+    with pd.option_context("display.unicode.east_asian_width", True, "display.max_colwidth", 50, "display.max_rows", 10000):
         diff = df[df.isnull().any(axis=1)].copy()
 
         # make scripture_compare VERSES="啟示錄12:18;尼希米記13:31;歷代志上21:31;歷代志上22:19;約伯記3:3;路加福音21:30"

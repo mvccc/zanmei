@@ -32,7 +32,7 @@ make scripture_compare           # Compare Bible sources
 
 # Download hymn resources
 make download                    # All sources
-make zanmei / hoctoga / hoc5 / mvccc  # Individual sources
+make zanmei / hoc5 / mvccc        # Individual sources
 
 # Code quality
 make format                      # Auto-format with Ruff
@@ -64,7 +64,7 @@ uv run python <script.py>        # Run script in environment
 - `scripture.py`: Bible class with pandas DataFrame backend, supports `ibibles.net` and `bible.cloud` sources
 - `index.py`: Parses Chinese citations like "馬太福音25:14-30" or "約翰福音3:16;14:6"
 
-**`hymns/`**: Web scrapers for `zanmei.py`, `hoctoga.py`, `hoc5.py`, `mvccc.py`
+**`hymns/`**: Web scrapers for `zanmei.py`, `hoc5.py`, `mvccc.py`
 
 ### Service Configuration
 

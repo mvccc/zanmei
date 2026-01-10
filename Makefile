@@ -35,9 +35,6 @@ OPT := -v 1
 zanmei:
 	$(PYTHON) -m hymns.zanmei $(OPT)
 
-.PHONY: hoctoga
-hoctoga:
-	$(PYTHON) -m hymns.hoctoga $(OPT)
 
 .PHONY: hoc5
 hoc5:
@@ -59,7 +56,7 @@ ibibles.net:
 bible.cloud:
 	[ -e download/CMNUNV.epub ] || (cd download && curl -L -O https://bible.cloud/ebooks/epub/CMNUNV.epub)
 
-download: zanmei hoctoga hoc5 mvccc ibibles.net bible.cloud
+download: zanmei hoc5 mvccc ibibles.net bible.cloud
 
 #-------------------------------------------------------------------------------
 .PHONY: pptx

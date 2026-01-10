@@ -48,9 +48,7 @@ def extract_lyrics(text: str, index: int, processed_basepath: Optional[Path] = N
     return raw_text
 
 
-async def download_and_extract_lyrics(
-    session: ClientSession, idx: int, download_basepath: Optional[Path] = None
-) -> None:
+async def download_and_extract_lyrics(session: ClientSession, idx: int, download_basepath: Optional[Path] = None) -> None:
     if download_basepath is None:
         download_basepath = Path(FLAGS.download_basedir)
 

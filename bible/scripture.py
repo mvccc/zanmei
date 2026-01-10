@@ -35,9 +35,7 @@ class Bible:
     word_god: str = attr.ib()
     df: pd.DataFrame = attr.ib()
 
-    def search(
-        self, book_citation_list: List[Tuple[str, BookCitations]], word_god: str = None
-    ) -> Dict[str, List[BibleVerse]]:
+    def search(self, book_citation_list: List[Tuple[str, BookCitations]], word_god: str = None) -> Dict[str, List[BibleVerse]]:
         if word_god is None:
             word_god = FLAGS.bible_word_god
 
