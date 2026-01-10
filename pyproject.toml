@@ -84,10 +84,3 @@ combine-as-imports = true
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
-
-[dependency-groups]
-dev = [
-    "deepseek-ocr>=0.3.0",
-    "easyocr>=1.7.2",
-    "pillow>=12.0.0",
-]
