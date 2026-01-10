@@ -5,6 +5,7 @@
 from datetime import date, timedelta
 from pathlib import Path
 from pprint import pformat
+import re
 from typing import Dict, Generator, List, Tuple
 
 import attr
@@ -67,7 +68,8 @@ def extract_slides_text(ppt: Presentation) -> Generator[Tuple[int, List[List[str
 #
 LAYOUT_NAME_PRELUDE = ("prelude",)
 LAYOUT_NAME_MESSAGE = ("message",)
-LAYOUT_NAME_HYMN = ("hymn",)
+LAYOUT_NAME_HYMN_TITLE = ("hymn_title",)
+LAYOUT_NAME_HYMN_LYRICS = ("hymn_lyrics",)
 LAYOUT_NAME_SCRIPTURE = ("verse",)
 LAYOUT_NAME_MEMORIZE = ("memorize",)
 LAYOUT_NAME_TEACHING = ("teaching",)
@@ -140,6 +142,37 @@ class Hymn:
     lyrics: List[Tuple[str, List[str]]] = attr.ib()  # List[title, paragraph]
 
     def add_to(self, ppt: Presentation, padding: str = " ") -> Presentation:
+        hymn_title = None
+        for _, slide_content in self.lyrics:
+            if len(slide_content) == 2:
+                title, _ = slide_content
+            elif len(slide_content) == 1:
+                title = [""]
+            else:
+                raise ValueError(f"Unexpected slide_content structure: {slide_content}")
+
+            for item in title:
+                item = item.strip()
+                if item:
+                    hymn_title = item
+                    break
+            if hymn_title:
+                break
+
+        if hymn_title:
+            hymn_title = re.sub(r"\(\d+\)$", "", hymn_title).rstrip()
+        else:
+            hymn_title = Path(self.filename).stem
+
+        title_slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN_TITLE))
+        title_holder = _get_placeholder_by_type(title_slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
+        title_holder.text = hymn_title
+        try:
+            paragraph_holder = _get_placeholder_by_type(title_slide, (PP_PLACEHOLDER.BODY,))
+            paragraph_holder.text = ""
+        except ValueError:
+            pass
+
         for _, slide_content in self.lyrics:
             # Handle both cases: [title_list, paragraph_list] or [combined_list]
             if len(slide_content) == 2:
@@ -151,10 +184,11 @@ class Hymn:
             else:
                 raise ValueError(f"Unexpected slide_content structure: {slide_content}")
 
-            slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN))
-            title_holder = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
+            if not paragraph or not any(line.strip() for line in paragraph):
+                continue
+
+            slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN_LYRICS))
             paragraph_holder = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
-            title_holder.text = title[0]
             # XXX: workaround alignment problem
             if paragraph:
                 paragraph[0] = padding + paragraph[0]

@@ -9,7 +9,7 @@
 - **Slide generation**: Creates professionally formatted service presentations from templates
 
 **Tech Stack:**
-- Python 3.8+
+- Python 3.12+
 - `uv` for dependency management (modern, fast Python package manager)
 - `python-pptx` for PowerPoint manipulation
 - `absl-py` for CLI flags
@@ -133,8 +133,8 @@ make pptx_to_text PPTX=path/to/file.pptx
 The project uses **Ruff** (an extremely fast Python linter and formatter) for all code quality checks. Ruff replaces Black, isort, and flake8.
 
 **Configuration:** See `[tool.ruff]` in `pyproject.toml`
-- Line length: 120 characters
-- Target: Python 3.8+
+- Line length: 128 characters
+- Target: Python 3.12+
 - Black-compatible formatting
 - Enabled linting rules: E, W, F, I, N, UP, B, C4, SIM, A, T20, ERA
 
@@ -224,7 +224,6 @@ Hymns can be specified as:
 **Reference Files:**
 - `mvccc_master.pptx` - Current template
 - `mvccc_master_modern.pptx` - Modern design template (in progress)
-- `modern_design_samples.pptx` - Design reference samples
 
 ### External Dependencies
 
