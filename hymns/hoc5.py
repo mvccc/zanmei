@@ -90,8 +90,8 @@ async def download_and_extract_lyrics(
 
 async def process_hymns() -> None:
     async with ClientSession() as session:
-        tasks = [download_and_extract_lyrics(session, idx) for idx in range(1, TOTAL + 1)]
-        await asyncio.wait(tasks)
+        tasks = [asyncio.create_task(download_and_extract_lyrics(session, idx)) for idx in range(1, TOTAL + 1)]
+        await asyncio.gather(*tasks)
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ name = "hymns"
 version = "0.5.0"
 description = "Download all resources for 'Hymns for God's People'"
 authors = [{ name = "Dyno Fu", email = "dyno.fu@gmail.com" }]
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 dependencies = [
   "absl-py",
   "aiodns",
@@ -31,8 +31,7 @@ build-backend = "hatchling.build"
 
 [tool.ruff]
 # Same line length as Black
-line-length = 120
-target-version = "py38"
+line-length = 128
 
 # Exclude same directories as Black
 exclude = [

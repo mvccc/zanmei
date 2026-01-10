@@ -131,8 +131,8 @@ async def download_lyrics_with_ppt(session: ClientSession, idx: int, download_ba
 
 async def process_all_hymns():
     async with ClientSession() as session:
-        tasks = [download_lyrics_with_ppt(session, idx) for idx in range(1, TOTAL + 1)]
-        await asyncio.wait(tasks)
+        tasks = [asyncio.create_task(download_lyrics_with_ppt(session, idx)) for idx in range(1, TOTAL + 1)]
+        await asyncio.gather(*tasks)
 
 
 if __name__ == "__main__":

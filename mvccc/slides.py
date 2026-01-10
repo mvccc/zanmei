@@ -17,7 +17,7 @@ from bible.scripture import BibleVerse, scripture
 
 flags.DEFINE_bool("extract_only", False, "extract text from pptx")
 flags.DEFINE_string("pptx", "", "The pptx")
-flags.DEFINE_string("master_pptx", "worship.pptx", "The template pptx")
+flags.DEFINE_string("master_pptx", "mvccc_master_modern.pptx", "The template pptx")
 
 flags.DEFINE_string("choir", "", "The hymn by choir")
 flags.DEFINE_multi_string("hymns", [], "The hymns by congregation")

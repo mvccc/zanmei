@@ -138,9 +138,10 @@ def verify(path: Path, glob: str, total: int) -> None:
     downloaded = sorted(path.name.split("_", 1)[0] for path in path_list)
     expected = [f"{no:03d}" for no in range(1, total + 1)]
     missing = ["493", "494", "495"]
-    log.warn(f"{missing} are missing from {HYMNS_INDEX_URL}. they are all in 492.")
+    log.warning(f"{missing} are missing from {HYMNS_INDEX_URL}. they are all in 492.")
     for no in missing:
-        expected.remove(no)
+        if no in expected:
+            expected.remove(no)
     assert all((a == b) for a, b in zip(downloaded, expected))
     assert len(path_list) == total
 

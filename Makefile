@@ -150,14 +150,17 @@ ipython:
 
 .PHONY: install-uv
 install-uv:
-	$$(command -v uv) || pip install uv
+	@command -v uv >/dev/null 2>&1 || pip install uv
 
 .PHONY: uv-sync
 uv-sync:
-	uv sync
+	uv sync --extra dev
 
 .PHONY: uv-lock
 uv-lock:
 	uv lock
 
 init: install-uv uv-sync download
+
+.PHONY: init-fast
+init-fast: install-uv uv-sync
