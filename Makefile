@@ -48,6 +48,10 @@ mvccc:
 stats:
 	$(PYTHON) -m hymns.stats $(OPT)
 
+.PHONY: extract-lyrics
+extract-lyrics:
+	$(PYTHON) -m hymns.extract $(OPT)
+
 .PHONY: ibibles.net
 ibibles.net:
 	[ -e download/cut/books.txt ] || (cd download && curl -L -O http://download.ibibles.net/cut.zip && unzip -o cut.zip)
