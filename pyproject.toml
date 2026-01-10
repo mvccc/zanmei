@@ -17,6 +17,7 @@ dependencies = [
   "numpy<2.4",
   "ollama>=0.6.1",
   "pandas",
+  "pillow>=12.0.0",
   "python-pptx",
   "requests",
   "streamlit>=0.49.0",
