@@ -21,15 +21,27 @@ LYRICS_URL_TEMPLATE = "http://www.hoctoga.org/Chinese/lyrics/hymn/hymn-{idx:03d}
 PPT_URL_BASE = "http://www.hoctoga.org/Chinese/lyrics/hymn/"
 
 
-def extract_lyrics_and_ppt_link(text: str, index: int, processed_basepath: Optional[Path] = None) -> str:
+def extract_lyrics_and_ppt_link(
+    text: str, index: int, processed_basepath: Optional[Path] = None
+) -> Optional[tuple[str, str]]:
     if processed_basepath is None:
         processed_basepath = Path(FLAGS.processed_basedir)
 
     soup = BeautifulSoup(text, "html.parser")
-    trs = soup.find("table").findAll("tr")
+    table = soup.find("table")
+    if table is None:
+        log.warning(f"missing lyrics table for hymn {index:03d}")
+        return None
+    trs = table.findAll("tr")
+    if len(trs) < 2 or trs[0] is None or trs[1] is None:
+        log.warning(f"incomplete lyrics table for hymn {index:03d}")
+        return None
 
     title = trs[0].text.strip()
 
+    if trs[1].p is None:
+        log.warning(f"missing lyrics content for hymn {index:03d}")
+        return None
     p_text = trs[1].p.text
     lines = zip_blank_lines(map(str.strip, p_text.splitlines()))
     raw_text = "\n".join(lines)
@@ -44,6 +56,9 @@ def extract_lyrics_and_ppt_link(text: str, index: int, processed_basepath: Optio
         with errata_path.open("r") as f:
             p_text = f.read()
 
+    if trs[1].a is None or "href" not in trs[1].a.attrs:
+        log.warning(f"missing ppt link for hymn {index:03d}")
+        return None
     ppt_link = PPT_URL_BASE + trs[1].a["href"]
 
     return raw_text, ppt_link
@@ -123,7 +138,10 @@ async def download_lyrics_with_ppt(session: ClientSession, idx: int, download_ba
             log.warn(f"ignore decoding errors for {lyrics_url}")
             text = content.decode("big5", errors="ignore")
 
-        raw_text, ppt_link = extract_lyrics_and_ppt_link(text, idx)
+        result = extract_lyrics_and_ppt_link(text, idx)
+        if result is None:
+            return
+        _, ppt_link = result
         download_and_extract_ppt(ppt_link, idx)
     except Exception:  # NOQA
         log.exception(f"exception for {lyrics_url}")

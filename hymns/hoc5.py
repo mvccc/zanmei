@@ -22,10 +22,16 @@ def extract_lyrics(text: str, index: int, processed_basepath: Optional[Path] = N
 
     soup = BeautifulSoup(text, "html.parser")
 
+    if soup.title is None:
+        log.warning(f"missing title for hymn {index:03d}")
+        return ""
     title = soup.title.text
     title = re.sub("^[0-9 ]*", "", title).strip()
 
     table = soup.find("table")
+    if table is None:
+        log.warning(f"missing lyrics table for hymn {index:03d}")
+        return ""
     lines = zip_blank_lines(map(str.strip, table.text.splitlines()))
     raw_text = "\n".join(lines)
     raw_path = processed_basepath / f"{index:03d}_{title}.raw.txt"
