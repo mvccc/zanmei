@@ -23,6 +23,8 @@ PROMPT_MARKDOWN = "Read all text in this image and format as markdown."
 PROMPT_JSON = "Read all text in this image and return as JSON."
 
 
+
+
 @dataclass
 class OcrLine:
     text: str
@@ -67,6 +69,36 @@ def clean_ocr_text(text: str) -> str:
         text = re.sub(pattern, replacement, text)
 
     return text.strip()
+
+
+def extract_chinese(text: str) -> str:
+    """Extract only Chinese characters from text, preserving line structure.
+
+    The OCR outputs each character on its own line with verse numbers (1, 2, 3, 4).
+    This function extracts Chinese characters and groups them by verse.
+    """
+    lines = text.split("\n")
+    result_lines = []
+    current_chars = []
+
+    for line in lines:
+        line = line.strip()
+        # Check if line is a verse number (standalone digit)
+        if re.match(r"^\d+$", line):
+            # Save accumulated chars and start new group
+            if current_chars:
+                result_lines.append("".join(current_chars))
+                current_chars = []
+        else:
+            # Extract Chinese characters from this line
+            chinese = re.findall(r"[\u4e00-\u9fff]", line)
+            current_chars.extend(chinese)
+
+    # Don't forget last group
+    if current_chars:
+        result_lines.append("".join(current_chars))
+
+    return "\n".join(result_lines)
 
 
 def ollama_ocr(image_path: Path, prompt: str = PROMPT_PURE) -> str | None:
@@ -127,6 +159,7 @@ def extract_from_image(image_path: Path, output_format: str = "pure") -> HymnTex
     hymn_number = int(match.group(1))
 
     # Select prompt based on output format
+    # Note: "chinese" uses PROMPT_PURE then post-processes to extract Chinese only
     if output_format == "markdown":
         prompt = PROMPT_MARKDOWN
     elif output_format == "json":
@@ -140,8 +173,11 @@ def extract_from_image(image_path: Path, output_format: str = "pure") -> HymnTex
         log.warning(f"No text extracted from {image_path.name}")
         return None
 
-    # Clean text
-    full_text = clean_ocr_text(text)
+    # For "chinese" format, extract Chinese from raw text (before cleaning collapses lines)
+    if output_format == "chinese":
+        full_text = extract_chinese(text)
+    else:
+        full_text = clean_ocr_text(text)
 
     # Parse based on format
     structured_data = None
@@ -307,6 +343,6 @@ if __name__ == "__main__":
     flags.DEFINE_string("download_dir", "download/zanmei", "Directory containing hymn images")
     flags.DEFINE_string("output_dir", "processed/lyrics", "Directory to save extracted text")
     flags.DEFINE_string("hymns", None, "Comma-separated hymn numbers to extract (e.g., '1,2,3' or '100-105')")
-    flags.DEFINE_enum("format", "pure", ["pure", "markdown", "json"], "Output format: pure, markdown, or json")
+    flags.DEFINE_enum("format", "pure", ["pure", "markdown", "json", "chinese"], "Output format: pure, markdown, json, or chinese")
 
     app.run(main)
