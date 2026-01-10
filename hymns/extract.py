@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
 import json
-import ollama
 import re
-from dataclasses import dataclass, asdict, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import List, Optional
 
+import ollama
 from absl import app, flags, logging as log
 
 FLAGS = flags.FLAGS
@@ -16,34 +15,18 @@ OCR_MODEL = "deepseek-ocr:latest"  # Vision model for OCR
 OCR_TIMEOUT = 300  # 5 minutes
 
 
-# OCR prompts
-PROMPT_PURE = "Extract all visible text verbatim. Preserve line breaks. Do not summarize."
-PROMPT_MARKDOWN = """Extract all visible text verbatim. Preserve line breaks. Do not summarize.
-Format as Markdown with:
-- Title as H1
-- Verses as numbered lists
-- Chorus as quote block
-- Any headers in bold"""
+# OCR prompts - keep simple to avoid prompt leakage in output
+PROMPT_PURE = "Read all text in this image."
 
-PROMPT_JSON = """Extract all visible text verbatim. Preserve line breaks. Do not summarize.
-Return as JSON with this structure:
-{
-  "title": "hymn title",
-  "language": "chinese|english|both",
-  "verses": [
-    {
-      "type": "verse|chorus",
-      "number": 1,
-      "lines": ["line 1", "line 2", "..."]
-    }
-  ]
-}"""
+PROMPT_MARKDOWN = "Read all text in this image and format as markdown."
+
+PROMPT_JSON = "Read all text in this image and return as JSON."
 
 
 @dataclass
 class OcrLine:
     text: str
-    confidence: Optional[float] = None
+    confidence: float | None = None
 
 
 @dataclass
@@ -51,10 +34,10 @@ class HymnText:
     number: int
     filename: str
     title: str
-    lines: List[OcrLine] = field(default_factory=list)
+    lines: list[OcrLine] = field(default_factory=list)
     full_text: str = ""
     language: str = "unknown"  # "chinese", "english", "both"
-    structured_data: Optional[dict] = None  # For JSON-mode parsing
+    structured_data: dict | None = None  # For JSON-mode parsing
 
 
 def detect_language(text: str) -> str:
@@ -86,7 +69,7 @@ def clean_ocr_text(text: str) -> str:
     return text.strip()
 
 
-def ollama_ocr(image_path: Path, prompt: str = PROMPT_PURE) -> Optional[str]:
+def ollama_ocr(image_path: Path, prompt: str = PROMPT_PURE) -> str | None:
     """Perform OCR using Ollama library."""
 
     try:
@@ -97,35 +80,33 @@ def ollama_ocr(image_path: Path, prompt: str = PROMPT_PURE) -> Optional[str]:
 
     try:
         # Perform OCR with vision model
+        # IMPORTANT: temperature=0.0 is critical to prevent hallucination.
+        # Without it, the model generates plausible but invented text instead
+        # of actually reading the image content.
         response = client.chat(
             model=OCR_MODEL,
             messages=[{"role": "user", "content": prompt, "images": [str(image_path)]}],
+            options={"temperature": 0.0, "num_predict": 2048},
             stream=False,
         )
 
         # Extract content from response
-        if response and response.get("message"):
-            return response["message"].get("content", "")
-        return None
+        if response:
+            # Handle both dict and object-style responses
+            if hasattr(response, "message"):
+                content = response.message.content if hasattr(response.message, "content") else ""
+            elif isinstance(response, dict) and response.get("message"):
+                content = response["message"].get("content", "")
+            else:
+                log.warning(f"Unexpected response format: {type(response)}")
+                content = ""
 
-    except Exception as e:
-        log.error(f"Ollama OCR failed for {image_path.name}: {e}")
-        return None
-
-    # Preprocess image
-    image_bytes = preprocess_image(image_path)
-
-    try:
-        # Perform OCR with vision model
-        response = client.chat(
-            model=OCR_MODEL,
-            messages=[{"role": "user", "content": prompt, "images": [image_bytes]}],
-            stream=False,
-        )
-
-        # Extract content from response
-        if response and response.get("message"):
-            return response["message"].get("content", "")
+            if content:
+                return content
+            else:
+                log.warning(f"Empty content in response for {image_path.name}")
+                return None
+        log.warning(f"No response from model for {image_path.name}")
         return None
 
     except Exception as e:
@@ -133,7 +114,7 @@ def ollama_ocr(image_path: Path, prompt: str = PROMPT_PURE) -> Optional[str]:
         return None
 
 
-def extract_from_image(image_path: Path, output_format: str = "pure") -> Optional[HymnText]:
+def extract_from_image(image_path: Path, output_format: str = "pure") -> HymnText | None:
     """Extract text from a hymn image using Ollama vision model."""
 
     log.info(f"Processing {image_path.name}")
@@ -177,7 +158,7 @@ def extract_from_image(image_path: Path, output_format: str = "pure") -> Optiona
                 language = structured_data.get("language", detect_language(full_text))
                 lines_text = full_text
             else:
-                title = [l.strip() for l in full_text.split("\n") if l.strip()][0] if full_text else ""
+                title = [line.strip() for line in full_text.split("\n") if line.strip()][0] if full_text else ""
                 language = detect_language(full_text)
                 lines_text = full_text
         except json.JSONDecodeError as e:
