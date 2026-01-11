@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-from typing import Optional
 
 from absl import flags, logging as log
 
@@ -8,7 +7,7 @@ FLAGS = flags.FLAGS
 CWD_LOG_DIR = "logs"
 
 
-def initialize_logging(log_dir: Optional[str] = None) -> None:
+def initialize_logging(log_dir: str | None = None) -> None:
     """Initialize logging system"""
     # log_dir is a gflag defined in absl.logging
     if log_dir is None:

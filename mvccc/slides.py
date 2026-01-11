@@ -2,11 +2,11 @@
 
 # vim: set fileencoding=utf-8 :
 
+import re
+from collections.abc import Generator
 from datetime import date, timedelta
 from pathlib import Path
 from pprint import pformat
-import re
-from typing import Dict, Generator, List, Tuple
 
 import attr
 from absl import app, flags, logging as log
@@ -47,13 +47,13 @@ def next_sunday(today: date = None) -> str:
     return sunday.isoformat()
 
 
-def extract_slides_text(ppt: Presentation) -> Generator[Tuple[int, List[List[str]]], None, None]:
+def extract_slides_text(ppt: Presentation) -> Generator[tuple[int, list[list[str]]], None, None]:
     for idx, slide in enumerate(ppt.slides):
-        shape_text_list: List[List[str]] = []
+        shape_text_list: list[list[str]] = []
         for shape in slide.shapes:
             if not shape.has_text_frame:
                 continue
-            paragraph_text_list: List[str] = []
+            paragraph_text_list: list[str] = []
             for paragraph in shape.text_frame.paragraphs:
                 paragraph_text_list.append("".join(run.text.replace("\xa0", " ").strip() for run in paragraph.runs))
             while paragraph_text_list and not paragraph_text_list[-1]:
@@ -77,7 +77,7 @@ LAYOUT_NAME_SECTION = ("section",)
 LAYOUT_NAME_BLANK = ("blank",)
 
 
-def _get_slide_layout(ppt: Presentation, layout_names: Tuple[str, ...]):
+def _get_slide_layout(ppt: Presentation, layout_names: tuple[str, ...]):
     normalized = {n.strip().lower() for n in layout_names}
     for layout in ppt.slide_layouts:
         if layout.name and layout.name.strip().lower() in normalized:
@@ -86,7 +86,7 @@ def _get_slide_layout(ppt: Presentation, layout_names: Tuple[str, ...]):
     raise ValueError(f"Could not find slide layout in {layout_names}. Available layouts: {available}")
 
 
-def _get_placeholder_by_type(container, placeholder_types: Tuple[PP_PLACEHOLDER, ...]):
+def _get_placeholder_by_type(container, placeholder_types: tuple[PP_PLACEHOLDER, ...]):
     for placeholder in container.placeholders:
         pf = getattr(placeholder, "placeholder_format", None)
         ptype = getattr(pf, "type", None)
@@ -139,7 +139,7 @@ class Message:
 @attr.s
 class Hymn:
     filename: str = attr.ib()  # can be index number, hymn's title
-    lyrics: List[Tuple[str, List[str]]] = attr.ib()  # List[title, paragraph]
+    lyrics: list[tuple[str, list[str]]] = attr.ib()  # List[title, paragraph]
 
     def add_to(self, ppt: Presentation, padding: str = " ") -> Presentation:
         hymn_title = None
@@ -159,10 +159,7 @@ class Hymn:
             if hymn_title:
                 break
 
-        if hymn_title:
-            hymn_title = re.sub(r"\(\d+\)$", "", hymn_title).rstrip()
-        else:
-            hymn_title = Path(self.filename).stem
+        hymn_title = re.sub(r"\(\d+\)$", "", hymn_title).rstrip() if hymn_title else Path(self.filename).stem
 
         title_slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN_TITLE))
         title_holder = _get_placeholder_by_type(title_slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
@@ -197,7 +194,7 @@ class Hymn:
         return ppt
 
 
-def search_hymn_ppt(keyword: str, basepath: Path = None) -> List[Hymn]:
+def search_hymn_ppt(keyword: str, basepath: Path = None) -> list[Hymn]:
     if basepath is None:
         basepath = Path(PROCESSED)
 
@@ -233,7 +230,7 @@ def search_hymn_ppt(keyword: str, basepath: Path = None) -> List[Hymn]:
 
     found = [path for path in found if path.stem == keyword] + [path for path in found if path.stem != keyword]
 
-    result: List[Hymn] = []
+    result: list[Hymn] = []
     for path in found:
         ppt = Presentation(path.as_posix())
         lyrics = list(extract_slides_text(ppt))
@@ -263,7 +260,7 @@ class Section:
 @attr.s
 class Scripture:
     citations: str = attr.ib()
-    cite_verses: Dict[str, List[BibleVerse]] = attr.ib()
+    cite_verses: dict[str, list[BibleVerse]] = attr.ib()
 
     def add_to(self, ppt: Presentation, padding="  ") -> Presentation:
         for cite, verses in self.cite_verses.items():
@@ -291,7 +288,7 @@ def to_scripture(citations: str) -> Scripture:
 @attr.s
 class Memorize:
     citation: str = attr.ib()
-    verses: List[BibleVerse] = attr.ib()
+    verses: list[BibleVerse] = attr.ib()
 
     def add_to(self, ppt: Presentation, padding="\u3000\u3000") -> Presentation:
         slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_MEMORIZE))
@@ -333,7 +330,7 @@ class Blank:
 
 
 def mvccc_slides(
-    hymns: List[str],
+    hymns: list[str],
     scripture: str,
     memorize: str,
     message: str,
@@ -342,7 +339,7 @@ def mvccc_slides(
     response: str,
     offering: str,
     communion: bool,
-) -> List:
+) -> list:
     slides = [
         Message("請儘量往前或往中間坐,並將手機關閉或關至靜音,預備心敬拜！"),
         Message(
@@ -405,7 +402,7 @@ def mvccc_slides(
     return slides
 
 
-def to_pptx(slides: List, master_slide: Presentation) -> Presentation:
+def to_pptx(slides: list, master_slide: Presentation) -> Presentation:
     # Create a new presentation using the master template's layouts
     # but without any of the master's existing slides
     ppt = Presentation(FLAGS.master_pptx)

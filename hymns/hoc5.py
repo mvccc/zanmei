@@ -3,7 +3,6 @@
 import asyncio
 import re
 from pathlib import Path
-from typing import Optional
 from urllib.parse import urlparse
 
 from absl import app, flags, logging as log
@@ -16,7 +15,7 @@ FLAGS = flags.FLAGS
 LYRICS_URL_TEMPLATE = "http://www.hoc5.net/service/hymn{level}/{idx:03d}.htm"
 
 
-def extract_lyrics(text: str, index: int, processed_basepath: Optional[Path] = None) -> str:
+def extract_lyrics(text: str, index: int, processed_basepath: Path | None = None) -> str:
     if processed_basepath is None:
         processed_basepath = Path(FLAGS.processed_basedir)
 
@@ -48,7 +47,7 @@ def extract_lyrics(text: str, index: int, processed_basepath: Optional[Path] = N
     return raw_text
 
 
-async def download_and_extract_lyrics(session: ClientSession, idx: int, download_basepath: Optional[Path] = None) -> None:
+async def download_and_extract_lyrics(session: ClientSession, idx: int, download_basepath: Path | None = None) -> None:
     if download_basepath is None:
         download_basepath = Path(FLAGS.download_basedir)
 

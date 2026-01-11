@@ -1,6 +1,6 @@
 import re
 from collections import OrderedDict
-from typing import Dict, List, NamedTuple
+from typing import NamedTuple
 
 
 # defined for search
@@ -20,15 +20,16 @@ class Citation(NamedTuple):
 
 class BookCitations(NamedTuple):
     book: str
-    citations: List[Citation]
+    citations: list[Citation]
 
 
-def parse_citations(citations: str) -> Dict[str, BookCitations]:
+def parse_citations(citations: str) -> dict[str, BookCitations]:
     "parse citations to Dict[citation, List[BookCitation]]"
 
-    result: Dict[str, BookCitations] = OrderedDict()
+    result: dict[str, BookCitations] = OrderedDict()
 
     book_cites_list = re.split(r"[;；]", citations)
+    last_book = None
     for book_cites in book_cites_list:
         book_cites = (
             book_cites.replace("～", "-")
@@ -47,16 +48,19 @@ def parse_citations(citations: str) -> Dict[str, BookCitations]:
             book = m.group("book")
             cites_start = len(book)
             cites = book_cites[cites_start:]
+            last_book = book
         else:
+            if last_book is None:
+                raise ValueError(f"Invalid citation format: no book name found in '{book_cites}'")
+            book = last_book
             cites = book_cites
-            book_cites = book + cites
 
         # 2. citations
         # 11:12-15,19 => Citation((11,12), (11,15)), Citation((11,19),(11,19))
         # 11:12-13:15,19 => Citation((11,12), (13,15)), Citation((13,19),(13,19))
         # 23:10-11,15-17 => Citation((23,10), (23,11)), Citation((23,15),(23,17))
         prev_chapter = -1
-        cite_list: List[Citation] = []
+        cite_list: list[Citation] = []
         for cite in cites.split(","):
             parts = cite.split("-")
             if len(parts) == 1:  # single verse.
@@ -81,6 +85,6 @@ def parse_citations(citations: str) -> Dict[str, BookCitations]:
 
                 cite_list.append(Citation(VerseLoc(start_chapter, start_verse), VerseLoc(end_chapter, end_verse)))
 
-        result[book_cites] = BookCitations(book, cite_list)
+        result[book + cites] = BookCitations(book, cite_list)
 
     return result

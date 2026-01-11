@@ -4,7 +4,6 @@
 
 import asyncio
 from pathlib import Path
-from typing import List, Optional
 from urllib.parse import urlparse
 
 import attr
@@ -25,7 +24,7 @@ class Hymn:
     url: str = attr.ib()
 
 
-def _path(hymn: Hymn, download_basepath: Optional[Path] = None) -> Path:
+def _path(hymn: Hymn, download_basepath: Path | None = None) -> Path:
     if download_basepath is None:
         download_basepath = Path(FLAGS.download_basedir)
 
@@ -35,7 +34,7 @@ def _path(hymn: Hymn, download_basepath: Optional[Path] = None) -> Path:
     return path
 
 
-async def index(session: ClientSession, url: str, download_basepath: Optional[Path] = None) -> List[Hymn]:
+async def index(session: ClientSession, url: str, download_basepath: Path | None = None) -> list[Hymn]:
     if download_basepath is None:
         download_basepath = Path(FLAGS.download_basedir)
 

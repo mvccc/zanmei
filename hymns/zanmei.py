@@ -5,7 +5,6 @@
 import asyncio
 import re
 from pathlib import Path
-from typing import List, Optional
 from urllib.parse import urlparse
 
 import attr
@@ -32,14 +31,14 @@ class Hymn:
     url: str = attr.ib()
 
 
-def _path(hymn: Hymn, download_basepath: Optional[Path] = None) -> Path:
+def _path(hymn: Hymn, download_basepath: Path | None = None) -> Path:
     if download_basepath is None:
         download_basepath = Path(FLAGS.download_basedir)
     path = download_basepath / f"{hymn.no:03d}_{hymn.name}.png"
     return path
 
 
-async def index(session: ClientSession, url: str, download_basepath: Optional[Path] = None) -> List[Hymn]:
+async def index(session: ClientSession, url: str, download_basepath: Path | None = None) -> list[Hymn]:
     if download_basepath is None:
         download_basepath = Path(FLAGS.download_basedir)
 
@@ -155,11 +154,11 @@ def verify(path: Path, glob: str, total: int) -> None:
     for no in missing:
         if no in expected:
             expected.remove(no)
-    assert all((a == b) for a, b in zip(downloaded, expected))
+    assert all((a == b) for a, b in zip(downloaded, expected, strict=False))
     assert len(path_list) == total
 
 
-async def download_image_copy(download_basepath: Optional[Path] = None) -> None:
+async def download_image_copy(download_basepath: Path | None = None) -> None:
     if download_basepath is None:
         download_basepath = Path(FLAGS.download_basedir)
 

@@ -1,7 +1,6 @@
 import json
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict
 
 import attr
 from absl import logging as log
@@ -10,7 +9,7 @@ from absl import logging as log
 @attr.s
 class Lyrics:
     title: str = attr.ib()  # 標題
-    paragraphs: Dict[str, list] = attr.ib()  # 段落
+    paragraphs: dict[str, list] = attr.ib()  # 段落
     end: str = attr.ib(default="")  # 阿門
 
     def paragraphs_text_only(self):

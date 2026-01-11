@@ -1,13 +1,12 @@
 import asyncio
 import random
-from typing import Dict, Optional, Tuple
 
 from absl import flags, logging as log
 from aiohttp import ClientSession
 
 FLAGS = flags.FLAGS
 
-DEFAULT_HEADERS: Dict[str, str] = {
+DEFAULT_HEADERS: dict[str, str] = {
     "User-Agent": (
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     ),
@@ -22,10 +21,10 @@ RETRYABLE_STATUSES = {403, 429, 465, 500, 502, 503, 504}
 async def fetch(
     session: ClientSession,
     url: str,
-    headers: Optional[Dict[str, str]] = None,
+    headers: dict[str, str] | None = None,
     retries: int = 3,
     backoff_base: float = 0.5,
-) -> Tuple[int, str]:
+) -> tuple[int, str]:
     log.info(f"fetching {url}")
     merged_headers = DEFAULT_HEADERS.copy()
     if headers:

@@ -3,9 +3,10 @@
 import re
 import warnings
 from collections import OrderedDict, defaultdict
+from collections.abc import Generator
 from functools import lru_cache
 from pathlib import Path
-from typing import IO, Dict, Generator, List, NamedTuple, Tuple
+from typing import IO, NamedTuple
 from zipfile import ZipFile
 
 import attr
@@ -35,14 +36,14 @@ class Bible:
     word_god: str = attr.ib()
     df: pd.DataFrame = attr.ib()
 
-    def search(self, book_citation_list: List[Tuple[str, BookCitations]], word_god: str = None) -> Dict[str, List[BibleVerse]]:
+    def search(self, book_citation_list: list[tuple[str, BookCitations]], word_god: str = None) -> dict[str, list[BibleVerse]]:
         if word_god is None:
             word_god = FLAGS.bible_word_god
 
         def to_index(t: VerseLoc) -> int:
             return t.chapter * 1000 + t.verse
 
-        result: Dict[str, List[BibleVerse]] = OrderedDict()
+        result: dict[str, list[BibleVerse]] = OrderedDict()
         for cite_str, book_citations in book_citation_list:
             book, cite_list = book_citations
             verses = []
@@ -125,8 +126,8 @@ def from_bible_cloud(filename: str) -> Bible:
             #   <span class="fv">14你們這假冒為善的文士和法利賽人有禍了！因為你們侵吞寡婦的家產，假意做很長的禱告，所以要受更重的刑罰。</span>  # noqa: E501
             # </p></aside>
 
-            ft_notes: Dict[str, List[str]] = defaultdict(list)
-            ft_verses: Dict[str, str] = {}
+            ft_notes: dict[str, list[str]] = defaultdict(list)
+            ft_verses: dict[str, str] = {}
 
             for aside in book_root.find_all("aside"):
                 chv = aside.find("a").text.strip(" *:")
@@ -156,7 +157,7 @@ def from_bible_cloud(filename: str) -> Bible:
                     text = text.replace("*", "{}").format(*notes)
                 return BibleVerse(book, chapter, verse, text)
 
-            collector: List[str] = []
+            collector: list[str] = []
             chapter = 0  # Will be set on first verse encounter
             verse = 0  # Will be set on first verse encounter
             for div in book_root.find_all("div", class_=lambda klass: klass in ["p", "q", "m"]):
