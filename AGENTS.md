@@ -108,6 +108,8 @@ make scripture_compare VERSES="約翰福音3:16"
 
 ### Downloading Hymn Resources
 
+usually it's already done. don't need to download again.
+
 ```bash
 # Download from all sources
 make download
@@ -133,6 +135,7 @@ make pptx_to_text PPTX=path/to/file.pptx
 The project uses **Ruff** (an extremely fast Python linter and formatter) for all code quality checks. Ruff replaces Black, isort, and flake8.
 
 **Configuration:** See `[tool.ruff]` in `pyproject.toml`
+
 - Line length: 128 characters
 - Target: Python 3.12+
 - Black-compatible formatting
@@ -185,14 +188,17 @@ uv run pytest --capture=no --verbose -k test_name
 ## Working with Service Flag Files
 
 ### Flag File Location
+
 `services/YYYY-MM-DD.flags`
 
 ### Required Flags
+
 - `--scripture`: Main scripture reading (e.g., "馬太福音25:14-30")
 - `--message`: Sermon title
 - `--messager`: Speaker name
 
 ### Optional Flags
+
 - `--choir`: Opening choir hymn (format: `number_name`)
 - `--hymns`: Congregation hymns (can be specified multiple times)
 - `--response`: Response hymn after sermon
@@ -203,6 +209,7 @@ uv run pytest --capture=no --verbose -k test_name
 ### Hymn Specification Format
 
 Hymns can be specified as:
+
 1. **Number only**: `114` → Looks up hymn #114
 2. **Number + Name**: `114_主曾離寳座` → Uses this exact name
 3. **Name only**: `坐在寶座上聖潔羔羊` → Searches by name
@@ -214,6 +221,7 @@ Hymns can be specified as:
 ### PowerPoint Master Templates
 
 **CRITICAL:** Master slide templates (layout definitions, theme colors, fonts) **cannot be programmatically modified** with python-pptx. The library can:
+
 - ✅ Create slides using existing master layouts
 - ✅ Modify content on individual slides
 - ❌ Modify master slide layouts
@@ -222,12 +230,14 @@ Hymns can be specified as:
 **Workaround:** Master templates must be edited manually in Microsoft PowerPoint or Apple Keynote. See `MODERNIZE_MASTER.md` for detailed instructions.
 
 **Reference Files:**
+
 - `mvccc_master.pptx` - Current template
 - `mvccc_master_modern.pptx` - Modern design template (in progress)
 
 ### External Dependencies
 
 The project relies on external websites for hymn data:
+
 - **zanmei.cc** (`https://www.izanmei.cc`) - Primary hymn source
 - **hoc5.net** - Hymn audio/resources
 - **mvccc.org** - Church-specific resources
@@ -247,6 +257,7 @@ The project relies on external websites for hymn data:
 ### Streamlit Web UI
 
 Launch interactive slide generator:
+
 ```bash
 make streamlit-slides
 # Opens at http://localhost:8501/slides
@@ -283,6 +294,9 @@ uv run python mvccc/slides.py --pptx=output.pptx --flagfile=services/2025-01-12.
 
 1. **Check flag file exists:** `services/YYYY-MM-DD.flags`
 2. **Verify hymn resources downloaded:** `make download`
+    - if processed/mvccc/ is not empty, don't `make download`
+    - if the hymn index in processed/mvccc/ available, but with slight different title, use the name in processed/mvccc/.
+    - if the hymn is not available in processed/mvccc/, the image copy maybe available in download/zanmei, create the slide for the hymn and put in processed/mvccc/
 3. **Check template exists:** `mvccc_master.pptx` or configured template
 
 ### Scripture Not Found
@@ -301,6 +315,5 @@ uv run python mvccc/slides.py --pptx=output.pptx --flagfile=services/2025-01-12.
 
 ## Additional Resources
 
-- **Modernization Guide:** See `MODERNIZE_MASTER.md` for updating PowerPoint templates
 - **Flag File Examples:** Check `services/` directory for past service examples
 - **Hymn Sources:** See `README.md` for links to online hymnal resources
