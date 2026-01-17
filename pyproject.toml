@@ -27,15 +27,36 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["ipython", "jupyter", "pytest", "ruff"]
+dev = [
+  "ipython",
+  "jupyter",
+  "pytest",
+  "ruff",
+]
 
 [build-system]
-requires = ["hatchling"]
+requires = [
+  "hatchling",
+]
 build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 128
-exclude = [".cache", ".eggs", ".git", ".hg", ".mypy_cache", ".pytest_cache", ".ropeproject", ".tox", ".venv", "_build", "buck-out", "build", "dist"]
+exclude = [
+  ".cache",
+  ".eggs",
+  ".git",
+  ".hg",
+  ".mypy_cache",
+  ".pytest_cache",
+  ".ropeproject",
+  ".tox",
+  ".venv",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+]
 lint.select = [
   "E",   # pycodestyle errors
   "W",   # pycodestyle warnings
@@ -51,8 +72,19 @@ lint.select = [
   "ERA", # eradicate (commented-out code)
 ]
 lint.ignore = ["D"]  # pydocstyle (docstring conventions)
-lint.isort.known-first-party = ["base", "bible", "hymns", "mvccc"]
-lint.isort.known-third-party = ["aiohttp", "bs4", "hanziconv", "pptx", "pytest"]
+lint.isort.known-first-party = [
+  "base",
+  "bible",
+  "hymns",
+  "mvccc",
+]
+lint.isort.known-third-party = [
+  "aiohttp",
+  "bs4",
+  "hanziconv",
+  "pptx",
+  "pytest",
+]
 lint.isort.combine-as-imports = true
 format.quote-style = "double"
 format.indent-style = "space"
