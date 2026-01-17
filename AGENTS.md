@@ -220,14 +220,20 @@ Hymns can be specified as:
 
 ### PowerPoint Master Templates
 
-**CRITICAL:** Master slide templates (layout definitions, theme colors, fonts) **cannot be programmatically modified** with python-pptx. The library can:
+**python-pptx limitations:** The python-pptx library cannot modify master slide templates (layout definitions, theme colors, fonts). It can only:
 
 - ✅ Create slides using existing master layouts
 - ✅ Modify content on individual slides
 - ❌ Modify master slide layouts
 - ❌ Change theme colors or master fonts
 
-**Workaround:** Master templates must be edited manually in Microsoft PowerPoint or Apple Keynote. See `MODERNIZE_MASTER.md` for detailed instructions.
+**Workaround — Direct XML Editing:** PPTX files are ZIP archives containing XML files. To modify master templates programmatically:
+
+1. **Unzip** the `.pptx` file to a temporary directory
+2. **Edit** the XML files directly (e.g., `ppt/slideMasters/slideMaster1.xml`, `ppt/slideLayouts/*.xml`, `ppt/theme/theme1.xml`)
+3. **Rezip** the contents back into a `.pptx` file
+
+This approach allows full control over master slides, themes, colors, and fonts without manual PowerPoint editing.
 
 **Reference Files:**
 
