@@ -12,7 +12,6 @@ import attr
 from absl import app, flags, logging as log
 from pptx import Presentation
 from pptx.enum.shapes import PP_PLACEHOLDER
-from pptx.util import Pt
 
 from bible.index import parse_citations
 from bible.scripture import BibleVerse, scripture
@@ -139,28 +138,13 @@ class Message:
 
 @attr.s
 class Hymn:
-    filename: str = attr.ib()  # can be index number, hymn's title
-    lyrics: list[tuple[str, list[str]]] = attr.ib()  # List[title, paragraph]
+    filename: str = attr.ib()
+    lyrics: list[tuple[str, list[str]]] = attr.ib()
+    title: str | None = attr.ib(default=None)
 
     def add_to(self, ppt: Presentation, padding: str = " ") -> Presentation:
-        hymn_title = None
-        for _, slide_content in self.lyrics:
-            if len(slide_content) == 2:
-                title, _ = slide_content
-            elif len(slide_content) == 1:
-                title = [""]
-            else:
-                raise ValueError(f"Unexpected slide_content structure: {slide_content}")
-
-            for item in title:
-                item = item.strip()
-                if item:
-                    hymn_title = item
-                    break
-            if hymn_title:
-                break
-
-        hymn_title = re.sub(r"\(\d+\)$", "", hymn_title).rstrip() if hymn_title else Path(self.filename).stem
+        hymn_title = self.title or Path(self.filename).stem
+        hymn_title = re.sub(r"\(\d+\)$", "", hymn_title).rstrip()
 
         title_slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN_TITLE))
         title_holder = _get_placeholder_by_type(title_slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
@@ -171,38 +155,30 @@ class Hymn:
         except ValueError:
             pass
 
-        for _, slide_content in self.lyrics:
-            if len(slide_content) == 2:
-                title, paragraph = slide_content
-            elif len(slide_content) == 1:
-                continue  # title-only slide, skip (we already added title slide above)
-            else:
-                raise ValueError(f"Unexpected slide_content structure: {slide_content}")
-
+        for _, paragraph in self.lyrics:
             if not paragraph or not any(line.strip() for line in paragraph):
                 continue
 
             slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN_LYRICS))
             paragraph_holder = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
-            # XXX: workaround alignment problem
             if paragraph:
+                paragraph = paragraph.copy()
                 paragraph[0] = padding + paragraph[0]
             paragraph_holder.text = "\n".join(paragraph)
 
         return ppt
 
 
-def search_hymn_ppt(keyword: str, basepath: Path = None) -> list[Hymn]:
+def search_hymn_md(keyword: str, basepath: Path = None) -> list[Hymn]:
     if basepath is None:
         basepath = Path(PROCESSED)
 
-    keyword = keyword.replace(".pptx", "")
-    ptn = f"**/*{keyword}*.pptx"
+    keyword = keyword.replace(".pptx", "").replace(".md", "")
+    ptn = f"**/*{keyword}*.md"
     glob = basepath.glob(ptn)
     found = list(glob)
 
     if not found:
-        # interchangeability characters
         interchangebles = [("你", "祢", "袮"), ("寶", "寳"), ("他", "祂"), ("于", "於"), ("牆", "墻")]
         for t in interchangebles:
             for w in t:
@@ -217,10 +193,8 @@ def search_hymn_ppt(keyword: str, basepath: Path = None) -> list[Hymn]:
                         break
 
     if not found:
-        # Create a placeholder hymn with title and empty slide
         log.warning(f"can not find anything match {ptn}. Creating placeholder slides.")
-        # Create a simple hymn structure: title slide + empty slide
-        placeholder_hymn = Hymn(filename=keyword, lyrics=[(0, [[keyword], ["(歌詞待補充)"]]), (1, [[""], [""]])])
+        placeholder_hymn = Hymn(filename=keyword, title=keyword, lyrics=[("", ["(歌詞待補充)"])])
         return [placeholder_hymn]
 
     if len(found) > 1:
@@ -230,9 +204,11 @@ def search_hymn_ppt(keyword: str, basepath: Path = None) -> list[Hymn]:
 
     result: list[Hymn] = []
     for path in found:
-        ppt = Presentation(path.as_posix())
-        lyrics = list(extract_slides_text(ppt))
-        hymn = Hymn(path.name, lyrics)
+        from hymns.hymn_md import md_to_lyrics
+
+        md_content = path.read_text(encoding="utf-8")
+        hymn_title, lyrics = md_to_lyrics(md_content)
+        hymn = Hymn(path.name, lyrics, title=hymn_title)
         log.info(f"keyword={keyword}, lyrics=\n{pformat(hymn.lyrics)}")
         result.append(hymn)
 
@@ -346,14 +322,14 @@ def mvccc_slides(
                     哈巴谷書 2:20"""
         ),
     ]
-    hymn = search_hymn_ppt("聖哉聖哉聖哉")
+    hymn = search_hymn_md("聖哉聖哉聖哉")
     slides.append(hymn[0])
 
     slides.append(Section("宣  召"))
 
     slides.append(Section("頌  讚"))
     for kw in hymns:
-        r = search_hymn_ppt(kw)
+        r = search_hymn_md(kw)
         slides.append(r[0])
 
     slides.append(Section("祈  禱"))
@@ -368,18 +344,18 @@ def mvccc_slides(
 
     slides.append(Section("獻  詩"))
     if choir:
-        hymn = search_hymn_ppt(choir)[0]
+        hymn = search_hymn_md(choir)[0]
         slides.append(hymn)
 
     slides.append(Teaching("信息", f"「{message}」", f"{messager}"))
 
     slides.append(Section("回  應"))
     if response:
-        hymn = search_hymn_ppt(response)[0]
+        hymn = search_hymn_md(response)[0]
         slides.append(hymn)
 
     if offering:
-        hymn = search_hymn_ppt(offering)[0]
+        hymn = search_hymn_md(offering)[0]
         slides.append(hymn)
 
     slides.append(Section("奉 獻 禱 告"))
@@ -390,7 +366,7 @@ def mvccc_slides(
     slides.append(Section("歡 迎 您"))
     slides.append(Section("家 事 分 享"))
 
-    hymn = search_hymn_ppt("三一頌")[0]
+    hymn = search_hymn_md("三一頌")[0]
     slides.append(hymn)
 
     slides.append(Section("祝  福"))

@@ -11,6 +11,8 @@ Hold thou my hand, dear Lord,
 Hold thou my hand;
 I do not ask to see, or ask to understand;
 Only that thou wilt be near, ever near to me,
+
+##
 Holding my hand, dear Lord,
 Holding my hand.
 
@@ -26,6 +28,8 @@ Hold thou my hand, dear Lord,
 Hold thou my hand;
 And when temptations come,
 help me to firmly stand.
+
+##
 Near ever near to thee, all shall be well with me
 Holding thy hand, dear Lord
 Holding thy hand.
