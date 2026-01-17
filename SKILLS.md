@@ -17,8 +17,8 @@ make slides SUNDAY=2024-03-24
 
 **Requirements:**
 - Service configuration file at `services/{YYYY-MM-DD}.flags`
-- Hymn PPTX files in `processed/` directory
-- Master template (`worship.pptx` or specified via `--master_pptx`)
+- Hymn files in `processed/mvccc/` directory (Markdown `.md` format preferred, PPTX also supported)
+- Master template (`mvccc_master_modern_dark.pptx` or specified via `--master_pptx`)
 
 **Output:** `{YYYY-MM-DD}.pptx` with complete service flow including:
 - Opening messages and call to worship
@@ -82,7 +82,7 @@ make mvccc       # mvccc.org church resources
 - `download/hoc5/` - Hymn resources
 - `download/mvccc/` - Church-specific resources
 
-**Note:** Downloaded resources need to be converted to PPTX format and placed in `processed/` for use in slide generation.
+**Note:** Downloaded resources are converted to Markdown format (`.md`) and placed in `processed/mvccc/` for use in slide generation. Markdown is the preferred format as it allows easier editing and version control.
 
 ---
 
@@ -104,14 +104,14 @@ make pptx_to_text PPTX=processed/mvccc/聖哉聖哉聖哉.pptx
 
 ## Hymn Search
 
-Search for hymn PPTX files by keyword with fuzzy matching for Chinese character variants.
+Search for hymn files by keyword with fuzzy matching for Chinese character variants. Searches Markdown files (`.md`) in `processed/mvccc/` directory.
 
 **Programmatic usage:**
 ```python
-from mvccc.slides import search_hymn_ppt
+from mvccc.slides import search_hymn_md
 
 # Returns list of Hymn objects with lyrics
-hymns = search_hymn_ppt("主曾離寳座")
+hymns = search_hymn_md("主曾離寳座")
 ```
 
 **Fuzzy matching handles:**
@@ -147,6 +147,10 @@ Create service configuration files for slide generation.
 - Number + name: `114_主曾離寳座`
 - Name only: `坐在寶座上聖潔羔羊`
 - Number only: `114`
+
+**Hymn title display:**
+- Hymns with numbers display as: `教會聖詩 #114` (40pt) followed by `《主曾離寳座》` (80pt bold)
+- Hymns without numbers display title only in 80pt bold
 
 ---
 
