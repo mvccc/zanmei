@@ -233,6 +233,7 @@ def md_to_pptx(md_path: str | Path, template_pptx: str = "mvccc_master_modern_da
         LAYOUT_NAME_HYMN_TITLE,
         _get_placeholder_by_type,
         _get_slide_layout,
+        add_verse_footnote,
     )
 
     md_path = Path(md_path)
@@ -255,10 +256,11 @@ def md_to_pptx(md_path: str | Path, template_pptx: str = "mvccc_master_modern_da
     except ValueError:
         pass
 
-    for _verse_marker, lyrics in slides_data:
+    for verse_marker, lyrics in slides_data:
         slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN_LYRICS))
         body = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
         body.text = " " + "\n".join(lyrics)
+        add_verse_footnote(slide, verse_marker, ppt)
 
     return ppt
 

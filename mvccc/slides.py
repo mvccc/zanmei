@@ -11,7 +11,10 @@ from pprint import pformat
 import attr
 from absl import app, flags, logging as log
 from pptx import Presentation
+from pptx.dml.color import RGBColor
 from pptx.enum.shapes import PP_PLACEHOLDER
+from pptx.enum.text import PP_ALIGN
+from pptx.util import Inches, Pt
 
 from bible.index import parse_citations
 from bible.scripture import BibleVerse, scripture
@@ -104,6 +107,50 @@ def _get_placeholder_by_type(container, placeholder_types: tuple[PP_PLACEHOLDER,
     raise ValueError(f"Could not find placeholder types {placeholder_types}. Available placeholder types: {available}")
 
 
+def add_verse_footnote(slide, verse_marker: str | None, ppt: Presentation) -> None:
+    verse_marker = (verse_marker or "").strip()
+    if not verse_marker:
+        return
+
+    label = verse_marker
+    width = Inches(1.5)
+    height = Inches(0.4)
+    margin = Inches(0.25)
+    left = max(Inches(0.1), ppt.slide_width - width - margin)
+    top = margin
+
+    textbox = slide.shapes.add_textbox(left, top, width, height)
+    textbox.text_frame.clear()
+    paragraph = textbox.text_frame.paragraphs[0]
+    paragraph.text = label
+    paragraph.alignment = PP_ALIGN.RIGHT
+
+    for run in paragraph.runs:
+        run.font.size = Pt(18)
+        run.font.color.rgb = RGBColor(0xF9, 0xC6, 0x5D)
+
+    textbox.text_frame.margin_bottom = 0
+    textbox.text_frame.margin_top = 0
+    textbox.text_frame.margin_left = 0
+    textbox.text_frame.margin_right = 0
+
+
+def apply_font_style(text_frame, font_size: Pt | None = None, alignment: PP_ALIGN | None = None):
+    if text_frame is None:
+        return
+    for paragraph in text_frame.paragraphs:
+        if alignment is not None:
+            paragraph.alignment = alignment
+        if font_size is None:
+            continue
+        if paragraph.runs:
+            for run in paragraph.runs:
+                run.font.size = font_size
+        else:
+            run = paragraph.add_run()
+            run.font.size = font_size
+
+
 @attr.s
 class Prelude:
     message: str = attr.ib()
@@ -132,6 +179,7 @@ class Message:
         slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_MESSAGE))
         body = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
         body.text = padding + self.message
+        apply_font_style(body.text_frame, font_size=Pt(60), alignment=PP_ALIGN.CENTER)
 
         return ppt
 
@@ -155,7 +203,7 @@ class Hymn:
         except ValueError:
             pass
 
-        for _, paragraph in self.lyrics:
+        for verse_marker, paragraph in self.lyrics:
             if not paragraph or not any(line.strip() for line in paragraph):
                 continue
 
@@ -165,6 +213,7 @@ class Hymn:
                 paragraph = paragraph.copy()
                 paragraph[0] = padding + paragraph[0]
             paragraph_holder.text = "\n".join(paragraph)
+            add_verse_footnote(slide, verse_marker, ppt)
 
         return ppt
 
@@ -286,11 +335,11 @@ class Teaching:
         # Try to get BODY, if not available, put all content in title
         try:
             body = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
-            title_ph.text = self.title
-            body.text = f"{self.message}\n\n{self.messenger}"
+            title_ph.text = self.message
+            body.text = self.messenger
         except ValueError:
             # No BODY placeholder, combine all in title
-            title_ph.text = f"{self.title}\n{self.message}\n{self.messenger}"
+            title_ph.text = f"{self.message}\n{self.messenger}"
 
         return ppt
 
