@@ -1,0 +1,192 @@
+#!/usr/bin/env python3
+"""Convert hymn lyrics between PPTX and Markdown formats.
+
+Markdown format:
+    # Hymn Title
+
+    ## (1)
+    First line of verse 1
+    Second line of verse 1
+
+    ## (2)
+    First line of verse 2
+    Second line of verse 2
+"""
+
+import re
+from pathlib import Path
+
+from pptx import Presentation
+
+from mvccc.slides import extract_slides_text, Hymn, _get_slide_layout, _get_placeholder_by_type
+from mvccc.slides import LAYOUT_NAME_HYMN_TITLE, LAYOUT_NAME_HYMN_LYRICS
+from pptx.enum.shapes import PP_PLACEHOLDER
+
+
+def pptx_to_md(pptx_path: str | Path) -> str:
+    ppt = Presentation(str(pptx_path))
+    slides = list(extract_slides_text(ppt))
+
+    if not slides:
+        return ""
+
+    lines = []
+    hymn_title = None
+
+    for idx, slide_content in slides:
+        if len(slide_content) == 1:
+            title_list = slide_content[0]
+            title = title_list[0] if title_list else ""
+            if hymn_title is None:
+                hymn_title = _clean_title(title)
+                lines.append(f"# {hymn_title}")
+                lines.append("")
+            continue
+
+        if len(slide_content) >= 2:
+            title_list, lyrics_list = slide_content[0], slide_content[1]
+            title = title_list[0] if title_list else ""
+
+            if hymn_title is None:
+                hymn_title = _clean_title(title)
+                lines.append(f"# {hymn_title}")
+                lines.append("")
+
+            verse_marker = _extract_verse_marker(title)
+            if verse_marker:
+                lines.append(f"## {verse_marker}")
+            else:
+                lines.append("##")
+
+            for lyric_line in lyrics_list:
+                lines.append(lyric_line)
+            lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _clean_title(title: str) -> str:
+    title = re.sub(r"^#?\d+[_\s]*", "", title)
+    title = re.sub(r"\s*\(\d+\)\s*$", "", title)
+    return title.strip()
+
+
+def _extract_verse_marker(title: str) -> str:
+    match = re.search(r"\((\d+)\)\s*$", title)
+    if match:
+        return f"({match.group(1)})"
+    return ""
+
+
+def md_to_lyrics(md_content: str) -> tuple[str, list[tuple[str, list[str]]]]:
+    """Returns: (hymn_title, [(verse_marker, [lyric_lines]), ...])"""
+    lines = md_content.strip().split("\n")
+
+    hymn_title = ""
+    slides = []
+    current_verse = ""
+    current_lyrics = []
+
+    for line in lines:
+        if line.startswith("# "):
+            hymn_title = line[2:].strip()
+        elif line.startswith("## "):
+            if current_lyrics:
+                slides.append((current_verse, current_lyrics))
+            current_verse = line[3:].strip()
+            current_lyrics = []
+        elif line.startswith("##"):
+            if current_lyrics:
+                slides.append((current_verse, current_lyrics))
+            current_verse = ""
+            current_lyrics = []
+        elif line.strip():
+            current_lyrics.append(line)
+
+    if current_lyrics:
+        slides.append((current_verse, current_lyrics))
+
+    return hymn_title, slides
+
+
+def md_to_pptx(md_path: str | Path, template_pptx: str = "mvccc_master_modern_dark.pptx") -> Presentation:
+    md_path = Path(md_path)
+    md_content = md_path.read_text(encoding="utf-8")
+    hymn_title, slides_data = md_to_lyrics(md_content)
+
+    ppt = Presentation(template_pptx)
+
+    while len(ppt.slides) > 0:
+        r_id = ppt.slides._sldIdLst[0].rId
+        ppt.part.drop_rel(r_id)
+        del ppt.slides._sldIdLst[0]
+
+    title_slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN_TITLE))
+    title_holder = _get_placeholder_by_type(title_slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
+    title_holder.text = hymn_title
+    try:
+        body = _get_placeholder_by_type(title_slide, (PP_PLACEHOLDER.BODY,))
+        body.text = ""
+    except ValueError:
+        pass
+
+    for verse_marker, lyrics in slides_data:
+        slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN_LYRICS))
+        body = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
+        body.text = " " + "\n".join(lyrics)
+
+    return ppt
+
+
+def convert_pptx_to_md(pptx_path: str | Path) -> Path:
+    pptx_path = Path(pptx_path)
+    md_content = pptx_to_md(pptx_path)
+    md_path = pptx_path.with_suffix(".md")
+    md_path.write_text(md_content, encoding="utf-8")
+    return md_path
+
+
+def convert_md_to_pptx(md_path: str | Path, template_pptx: str = "mvccc_master_modern_dark.pptx") -> Path:
+    md_path = Path(md_path)
+    ppt = md_to_pptx(md_path, template_pptx)
+    pptx_path = md_path.with_suffix(".pptx")
+    ppt.save(str(pptx_path))
+    return pptx_path
+
+
+def convert_all_pptx(directory: str | Path = "processed/mvccc") -> list[Path]:
+    directory = Path(directory)
+    converted = []
+
+    for pptx_path in sorted(directory.glob("*.pptx")):
+        try:
+            md_path = convert_pptx_to_md(pptx_path)
+            converted.append(md_path)
+        except Exception as e:
+            print(f"Error converting {pptx_path}: {e}")
+
+    return converted
+
+
+if __name__ == "__main__":
+    import sys
+
+    if len(sys.argv) < 2:
+        print("Usage:")
+        print("  python -m hymns.hymn_md <file.pptx>  Convert PPTX to MD")
+        print("  python -m hymns.hymn_md <file.md>    Convert MD to PPTX")
+        print("  python -m hymns.hymn_md --all        Convert all PPTX in processed/mvccc to MD")
+        sys.exit(1)
+
+    if sys.argv[1] == "--all":
+        converted = convert_all_pptx()
+        print(f"Converted {len(converted)} files")
+    elif sys.argv[1].endswith(".pptx"):
+        md_path = convert_pptx_to_md(sys.argv[1])
+        print(f"Converted: {md_path}")
+    elif sys.argv[1].endswith(".md"):
+        pptx_path = convert_md_to_pptx(sys.argv[1])
+        print(f"Converted: {pptx_path}")
+    else:
+        print(f"Unknown file type: {sys.argv[1]}")
+        sys.exit(1)
