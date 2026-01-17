@@ -12,6 +12,7 @@ import attr
 from absl import app, flags, logging as log
 from pptx import Presentation
 from pptx.enum.shapes import PP_PLACEHOLDER
+from pptx.util import Pt
 
 from bible.index import parse_citations
 from bible.scripture import BibleVerse, scripture
@@ -262,7 +263,7 @@ class Scripture:
     citations: str = attr.ib()
     cite_verses: dict[str, list[BibleVerse]] = attr.ib()
 
-    def add_to(self, ppt: Presentation, padding="  ") -> Presentation:
+    def add_to(self, ppt: Presentation, padding="") -> Presentation:
         for cite, verses in self.cite_verses.items():
             for idx, bv in enumerate(verses):
                 if idx % 2 == 0:
@@ -271,7 +272,7 @@ class Scripture:
                     message = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
                     title_ph.text = cite
                     message.text = ""
-                message.text += (padding if idx % 2 == 0 else "\n") + f"{bv.verse}\u3000{bv.text}"
+                message.text += ("" if idx % 2 == 0 else "\n") + f"{padding}{bv.verse}\u3000{bv.text}"
 
         return ppt
 
