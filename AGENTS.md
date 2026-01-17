@@ -237,8 +237,7 @@ This approach allows full control over master slides, themes, colors, and fonts 
 
 **Reference Files:**
 
-- `mvccc_master.pptx` - Current template
-- `mvccc_master_modern.pptx` - Modern design template (in progress)
+- `mvccc_master_modern_dark.pptx` - Current template
 
 ### External Dependencies
 
@@ -303,7 +302,6 @@ uv run python mvccc/slides.py --pptx=output.pptx --flagfile=services/2025-01-12.
     - if processed/mvccc/ is not empty, don't `make download`
     - if the hymn index in processed/mvccc/ available, but with slight different title, use the name in processed/mvccc/.
     - if the hymn is not available in processed/mvccc/, the image copy maybe available in download/zanmei, create the slide for the hymn and put in processed/mvccc/
-3. **Check template exists:** `mvccc_master.pptx` or configured template
 
 ### Scripture Not Found
 
