@@ -28,7 +28,7 @@ $ open 2019-03-24.pptx
 
 ```bash
 $ make pptx_to_text PPTX=processed/mvccc/聖哉聖哉聖哉.pptx
-poetry run python slides.py --extract_only --pptx processed/mvccc/聖哉聖哉聖哉.pptx
+uv run python mvccc/slides.py --extract_only --pptx processed/mvccc/聖哉聖哉聖哉.pptx
 01 [['聖哉聖哉聖哉'], ['聖哉聖哉聖哉 聖哉是我主', '聖哉聖哉聖哉 聖哉惟有主', '祂是全能奇妙 愛四面環繞', '聖哉聖哉聖哉 聖哉是我主']]
 ```
 
@@ -36,7 +36,7 @@ poetry run python slides.py --extract_only --pptx processed/mvccc/聖哉聖哉�
 
 ```bash
 $ make scripture VERSES="羅馬書12：1-2"
-poetry run python scripture.py --bible_index 羅馬書12：1-2
+uv run python -m bible.scripture --bible_citations 羅馬書12：1-2
 羅馬書12:1-2
   1 所以弟兄們、我以　神的慈悲勸你們、將身體獻上、當作活祭、是聖潔的、是　神所喜悅的．你們如此事奉、乃是理所當然的。
   2 不要效法這個世界．只要心意更新而變化、叫你們察驗何為　神的善良、純全可喜悅的旨意。
