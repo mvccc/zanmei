@@ -172,13 +172,10 @@ class Hymn:
             pass
 
         for _, slide_content in self.lyrics:
-            # Handle both cases: [title_list, paragraph_list] or [combined_list]
             if len(slide_content) == 2:
                 title, paragraph = slide_content
             elif len(slide_content) == 1:
-                # If only one list, treat it as paragraph with empty title
-                title = [""]
-                paragraph = slide_content[0]
+                continue  # title-only slide, skip (we already added title slide above)
             else:
                 raise ValueError(f"Unexpected slide_content structure: {slide_content}")
 
