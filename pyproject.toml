@@ -34,29 +34,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.ruff]
-# Same line length as Black
 line-length = 128
-
-# Exclude same directories as Black
-exclude = [
-  ".cache",
-  ".eggs",
-  ".git",
-  ".hg",
-  ".mypy_cache",
-  ".pytest_cache",
-  ".ropeproject",
-  ".tox",
-  ".venv",
-  "_build",
-  "buck-out",
-  "build",
-  "dist",
-]
-
-[tool.ruff.lint]
-# Enable recommended rules + enhanced linting
-select = [
+exclude = [".cache", ".eggs", ".git", ".hg", ".mypy_cache", ".pytest_cache", ".ropeproject", ".tox", ".venv", "_build", "buck-out", "build", "dist"]
+lint.select = [
   "E",   # pycodestyle errors
   "W",   # pycodestyle warnings
   "F",   # pyflakes
@@ -70,20 +50,10 @@ select = [
   "T20", # flake8-print
   "ERA", # eradicate (commented-out code)
 ]
-
-# Ignore rules matching current setup.cfg
-ignore = [
-  "D", # pydocstyle (docstring conventions)
-]
-
-[tool.ruff.lint.isort]
-# Import sorting - migrated from setup.cfg
-known-first-party = ["base", "bible", "hymns", "mvccc"]
-known-third-party = ["aiohttp", "bs4", "hanziconv", "pptx", "pytest"]
-combine-as-imports = true
-
-[tool.ruff.format]
-# Black-compatible formatting
-quote-style = "double"
-indent-style = "space"
-line-ending = "auto"
+lint.ignore = ["D"]  # pydocstyle (docstring conventions)
+lint.isort.known-first-party = ["base", "bible", "hymns", "mvccc"]
+lint.isort.known-third-party = ["aiohttp", "bs4", "hanziconv", "pptx", "pytest"]
+lint.isort.combine-as-imports = true
+format.quote-style = "double"
+format.indent-style = "space"
+format.line-ending = "auto"
