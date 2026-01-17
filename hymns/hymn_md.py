@@ -39,6 +39,12 @@ def pptx_to_md(pptx_path: str | Path) -> str:
                 hymn_title = _clean_title(title)
                 lines.append(f"# {hymn_title}")
                 lines.append("")
+            else:
+                lines.append("##")
+                for lyric_line in title_list:
+                    if lyric_line.strip():
+                        lines.append(_format_lyric_line(lyric_line))
+                lines.append("")
             continue
 
         if len(slide_content) >= 2:
@@ -57,7 +63,7 @@ def pptx_to_md(pptx_path: str | Path) -> str:
                 lines.append("##")
 
             for lyric_line in lyrics_list:
-                lines.append(lyric_line)
+                lines.append(_format_lyric_line(lyric_line))
             lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
@@ -74,6 +80,22 @@ def _extract_verse_marker(title: str) -> str:
     if match:
         return f"({match.group(1)})"
     return ""
+
+
+def _format_lyric_line(line: str) -> str:
+    if not line.strip():
+        return ""
+    if line.endswith("  "):
+        return line
+    return f"{line.rstrip()}  "
+
+
+def _strip_md_linebreak(line: str) -> str:
+    if not line.strip():
+        return ""
+    if line.endswith("  "):
+        return line[:-2]
+    return line.rstrip()
 
 
 def md_to_lyrics(md_content: str) -> tuple[str, list[tuple[str, list[str]]]]:
@@ -99,7 +121,7 @@ def md_to_lyrics(md_content: str) -> tuple[str, list[tuple[str, list[str]]]]:
             current_verse = ""
             current_lyrics = []
         elif line.strip():
-            current_lyrics.append(line)
+            current_lyrics.append(_strip_md_linebreak(line))
 
     if current_lyrics:
         slides.append((current_verse, current_lyrics))
@@ -191,7 +213,7 @@ def lyrics_to_md(hymn_title: str, slides: list[tuple[str, list[str]]]) -> str:
             lines.append(f"## {verse_marker}")
         else:
             lines.append("##")
-        lines.extend(lyrics)
+        lines.extend(_format_lyric_line(lyric) for lyric in lyrics)
         lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
