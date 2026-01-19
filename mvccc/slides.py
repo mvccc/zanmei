@@ -132,7 +132,6 @@ def add_verse_footnote(slide, verse_marker: str | None, ppt: Pptx) -> None:
 
     for run in paragraph.runs:
         run.font.size = Pt(18)
-        run.font.color.rgb = RGBColor(0xF9, 0xC6, 0x5D)
 
     textbox.text_frame.margin_bottom = 0
     textbox.text_frame.margin_top = 0
