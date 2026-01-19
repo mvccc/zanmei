@@ -155,6 +155,15 @@ def apply_font_style(text_frame, font_size: Pt | None = None, alignment: PP_ALIG
             run.font.size = font_size
 
 
+_PUNCTUATION = r"[，。；！？、：,.;!?:]"
+
+
+def _format_lyrics_line(line: str) -> str:
+    line = re.sub(_PUNCTUATION + r"+$", "", line.rstrip())
+    line = re.sub(_PUNCTUATION, "  ", line)
+    return line
+
+
 @attr.s
 class Prelude:
     message: str = attr.ib()
@@ -232,7 +241,7 @@ class Hymn:
             slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN_LYRICS))
             paragraph_holder = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
             if paragraph:
-                paragraph = paragraph.copy()
+                paragraph = [_format_lyrics_line(line) for line in paragraph]
                 paragraph[0] = padding + paragraph[0]
             paragraph_holder.text = "\n".join(paragraph)
             add_verse_footnote(slide, verse_marker, ppt)
