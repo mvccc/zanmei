@@ -26,7 +26,7 @@ Pptx = Any
 
 flags.DEFINE_bool("extract_only", False, "extract text from pptx")
 flags.DEFINE_string("pptx", "", "The pptx")
-flags.DEFINE_string("master_pptx", "mvccc_master_modern_dark.pptx", "The template pptx")
+flags.DEFINE_string("master_pptx", "mvccc_master_keynote_blue.pptx", "The template pptx")
 
 flags.DEFINE_string("choir", "", "The hymn by choir")
 flags.DEFINE_multi_string("hymns", [], "The hymns by congregation")

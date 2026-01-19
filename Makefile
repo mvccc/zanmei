@@ -63,10 +63,12 @@ bible.cloud:
 download: zanmei hoc5 mvccc ibibles.net bible.cloud
 
 #-------------------------------------------------------------------------------
+MASTER := mvccc_master_keynote_blue.pptx
+
 .PHONY: pptx
 # create slides for sunday service
 pptx:
-	$(PYTHON) mvccc/slides.py $(OPT) --pptx=$(SUNDAY).pptx --flagfile=services/$(SUNDAY).flags
+	$(PYTHON) mvccc/slides.py $(OPT) --master_pptx=$(MASTER) --pptx=$(SUNDAY).pptx --flagfile=services/$(SUNDAY).flags
 slides:pptx
 
 .PHONY: pptx_to_text
