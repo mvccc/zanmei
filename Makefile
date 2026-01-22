@@ -167,3 +167,23 @@ init: install-uv uv-sync download
 
 .PHONY: init-fast
 init-fast: install-uv uv-sync
+
+#-------------------------------------------------------------------------------
+# Docker yolo mode - sandbox for Claude Code
+
+DOCKER_IMAGE := zanmei-yolo
+
+.PHONY: docker-build
+docker-build:
+	docker build -t $(DOCKER_IMAGE) .
+
+.PHONY: docker-yolo
+docker-yolo:
+	@docker image inspect $(DOCKER_IMAGE) &>/dev/null || $(MAKE) docker-build
+	docker run -it --rm \
+		-v "$(shell pwd):/opt/zanmei" \
+		-v "$(HOME)/.claude:/home/yolo/.claude" \
+		-v "$(HOME)/.config/claude-code:/home/yolo/.config/claude-code" \
+		-v "$(HOME)/.config/opencode:/home/yolo/.config/opencode" \
+		-w /opt/zanmei \
+		$(DOCKER_IMAGE)
