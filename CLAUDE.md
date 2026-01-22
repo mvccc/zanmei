@@ -92,12 +92,17 @@ Flag files at `services/{YYYY-MM-DD}.flags`:
 
 ### python-pptx Limitations
 
-Master slide templates (layouts, theme colors, fonts) **cannot be modified programmatically**. The library can only:
+The python-pptx library cannot modify master slide templates (layouts, theme colors, fonts). It can only:
 - ✅ Create slides using existing layouts
 - ✅ Modify content on individual slides
 - ❌ Modify master slide layouts or themes
 
-Master templates must be edited manually in PowerPoint/Keynote.
+**Workaround — Direct XML Editing:** PPTX files are ZIP archives containing XML. To modify master templates programmatically:
+1. Unzip the `.pptx` file to a temporary directory
+2. Edit XML files directly (e.g., `ppt/slideLayouts/*.xml`, `ppt/slideMasters/*.xml`)
+3. Rezip the contents back into a `.pptx` file
+
+**Master Template:** `mvccc_master_modern_dark.pptx`
 
 ### Chinese Character Handling
 
