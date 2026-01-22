@@ -209,7 +209,8 @@ class Hymn:
         hymn_title = re.sub(r"\(\d+\)$", "", hymn_title).rstrip()
         hymn_title = re.sub(r"^\d+[_-]", "", hymn_title)
 
-        display_title = f"教會聖詩 #{self.number}\n《{hymn_title}》" if self.number else hymn_title
+        show_hymnal_number = self.number and int(self.number) <= 524
+        display_title = f"教會聖詩 #{self.number}\n《{hymn_title}》" if show_hymnal_number else hymn_title
 
         title_slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN_TITLE))
         title_holder = _get_placeholder_by_type(title_slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
@@ -217,7 +218,7 @@ class Hymn:
 
         if title_holder.has_text_frame:
             paragraphs = list(title_holder.text_frame.paragraphs)
-            if self.number:
+            if show_hymnal_number:
                 if len(paragraphs) >= 1:
                     paragraphs[0].font.size = Pt(40)
                 if len(paragraphs) >= 2:
