@@ -51,4 +51,4 @@ who leads on to the right.
 Thanks be to God  
 for all his wondrous ways  
 Thanks be to God,  
-let nations proclaim his praise!
+let nations proclaim his praise!  

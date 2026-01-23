@@ -47,4 +47,4 @@ Blessed are those
 those who dwell  
 dwellin thy house  
 O Lord, ever singing thy praise  
-ever singing thy praise
+ever singing thy praise  

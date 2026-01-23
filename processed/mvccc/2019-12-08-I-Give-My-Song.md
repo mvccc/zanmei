@@ -47,4 +47,4 @@ I can sing alleluia,
 Lord, I adore you.  
 All my days I can sing your praise.  
 I can give my song to you,  
-I can give my song to you.
+I can give my song to you.  

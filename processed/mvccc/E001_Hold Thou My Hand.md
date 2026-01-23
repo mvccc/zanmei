@@ -32,4 +32,4 @@ help me to firmly stand.
 ##
 Near ever near to thee, all shall be well with me  
 Holding thy hand, dear Lord  
-Holding thy hand.
+Holding thy hand.  

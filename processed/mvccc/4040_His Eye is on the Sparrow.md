@@ -70,4 +70,4 @@ I sing because I’m free.
 His eye is on the sparrow,  
 我救主既看顧麻雀  
 And I know He watches me.  
-深知我必蒙眷佑
+深知我必蒙眷佑  

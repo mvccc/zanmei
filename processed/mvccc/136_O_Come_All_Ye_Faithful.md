@@ -37,4 +37,4 @@ now in flesh appearing;
 O come, let us adore Him,  
 O come, let us adore Him,  
 O come, let us adore Him,  
-Christ the Lord.
+Christ the Lord.  
