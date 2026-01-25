@@ -148,10 +148,7 @@ def convert_ppt_to_md(ppt_path: Path, output_dir: Path | None = None) -> Path | 
     if not title:
         # Try to get title from filename
         match = re.match(r"^\d+_(.+)\.ppt$", ppt_path.name)
-        if match:
-            title = match.group(1)
-        else:
-            title = "Unknown"
+        title = match.group(1) if match else "Unknown"
 
     if not number:
         # Get number from filename

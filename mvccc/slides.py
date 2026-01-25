@@ -14,7 +14,6 @@ from typing import Any
 import attr
 from absl import app, flags, logging as log
 from pptx import Presentation
-from pptx.dml.color import RGBColor
 from pptx.enum.shapes import PP_PLACEHOLDER
 from pptx.enum.text import PP_ALIGN
 from pptx.util import Inches, Pt
