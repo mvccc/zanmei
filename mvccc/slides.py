@@ -163,6 +163,10 @@ def _format_lyrics_line(line: str) -> str:
     return line
 
 
+def _normalize_scripture_text(text: str) -> str:
+    return text.replace(" 神", "神").replace("\u3000神", "神")
+
+
 @attr.s
 class Prelude:
     message: str = attr.ib()
@@ -190,8 +194,26 @@ class Message:
     def add_to(self, ppt: Pptx, padding="\u3000\u3000") -> Pptx:
         slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_MESSAGE))
         body = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
-        body.text = padding + self.message
-        apply_font_style(body.text_frame, font_size=Pt(60), alignment=PP_ALIGN.CENTER)
+        left_margin = Inches(0.7)
+        top_margin = Inches(2.0)
+        body.left = left_margin
+        body.top = top_margin
+        body.width = max(Inches(1), ppt.slide_width - left_margin * 2)
+        body.height = max(Inches(1), ppt.slide_height - top_margin * 2)
+
+        lines = self.message.splitlines()
+        while lines and not lines[0].strip():
+            lines.pop(0)
+        while lines and not lines[-1].strip():
+            lines.pop()
+        message = "\n".join(lines)
+        body.text = padding + message if message else ""
+        apply_font_style(body.text_frame, font_size=Pt(72), alignment=PP_ALIGN.LEFT)
+
+        for paragraph in reversed(body.text_frame.paragraphs):
+            if paragraph.text.strip():
+                paragraph.alignment = PP_ALIGN.RIGHT
+                break
 
         return ppt
 
@@ -209,7 +231,7 @@ class Hymn:
         hymn_title = re.sub(r"^\d+[_-]", "", hymn_title)
 
         show_hymnal_number = self.number and int(self.number) <= 524
-        display_title = f"教會聖詩 #{self.number}\n《{hymn_title}》" if show_hymnal_number else hymn_title
+        display_title = f"教會聖詩 #{self.number}\n《{hymn_title}》" if show_hymnal_number else f"《{hymn_title}》"
 
         title_slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN_TITLE))
         title_holder = _get_placeholder_by_type(title_slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
@@ -333,7 +355,8 @@ class Scripture:
                     title_ph.text = cite
                     message.text = ""
                 if message:
-                    message.text += ("" if idx % 2 == 0 else "\n") + f"{padding}{bv.verse}\u3000{bv.text}"
+                    verse_text = _normalize_scripture_text(bv.text)
+                    message.text += ("" if idx % 2 == 0 else "\n") + f"{padding}{bv.verse}\u3000{verse_text}"
 
         return ppt
 
@@ -357,7 +380,13 @@ class Memorize:
         title_ph = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
         message = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
         title_ph.text = "本週金句"
-        message.text = padding + "".join(bv.text for bv in self.verses) + f"\n\n{self.citation:>35}"
+        verse_text = "".join(_normalize_scripture_text(bv.text) for bv in self.verses)
+        message.text = padding + verse_text + f"\n— {self.citation}"
+
+        for paragraph in reversed(message.text_frame.paragraphs):
+            if paragraph.text.strip():
+                paragraph.alignment = PP_ALIGN.RIGHT
+                break
 
         return ppt
 
@@ -403,12 +432,12 @@ def mvccc_slides(
     communion: bool,
 ) -> list[Any]:
     slides: list[Any] = [
-        Message("請儘量往前或往中間坐,並將手機關閉或關至靜音,預備心敬拜！"),
-        Message(
-            """惟耶和華在他的聖殿中；全地的人，都當在他面前肅敬靜默。
+        Message("""
+惟耶和華在他的聖殿中；
+全地的人，都當在他面前肅敬靜默。
 
-                    哈巴谷書 2:20"""
-        ),
+               -- 哈巴谷書 2:20
+"""),
     ]
     hymn = search_hymn_md("聖哉聖哉聖哉")
     slides.append(hymn[0])
