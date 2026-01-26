@@ -14,6 +14,7 @@ $ cat services/2019-03-24.flags
 --response=298_為主而活
 --offering=488-1_獻上感恩的心
 
+--call_scripture=詩篇95:6-7
 --scripture=馬太福音25:14-30
 --memorize=馬太福音25:23
 

@@ -32,6 +32,17 @@ message = st.text_input("主日信息", "我必不至缺乏")
 
 messager = st.text_input("證道神仆", "劉志信牧师")
 
+calling_citation = st.text_input("宣召經文", "")
+
+if calling_citation:
+    scriptures = to_scripture(calling_citation)
+    for _, verses in scriptures.cite_verses.items():
+        df = pd.DataFrame(verses)
+        df["chapter_verse"] = df["chapter"].astype(str) + ":" + df["verse"].astype(str)
+        df.set_index(["chapter_verse"], inplace=True)
+        styled = df[["text"]].style.applymap(lambda _: "text-align: left")
+        st.table(styled)
+
 citation = st.text_input("證道經文", "詩篇23:1-6")
 
 if citation:
@@ -82,6 +93,7 @@ communion = st.checkbox("擘餠喝杯", value=is_first_week)
 deck = mvccc_slides(
     hymns=[h.filename for h in hymns],
     scripture=citation,
+    call_scripture=calling_citation,
     memorize=memorise,
     message=message,
     messager=messager,

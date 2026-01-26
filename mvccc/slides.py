@@ -33,6 +33,7 @@ flags.DEFINE_string("response", "", "The hymn after the teaching")
 flags.DEFINE_string("offering", "", "The hymn for the offering")
 
 flags.DEFINE_string("scripture", "", "The bible scriptures")
+flags.DEFINE_string("call_scripture", "", "The calling scripture")
 flags.DEFINE_string("memorize", "", "The bible scripture to memorize")  # verse of the week
 
 flags.DEFINE_string("message", "", "The message")
@@ -424,6 +425,7 @@ class Blank:
 def mvccc_slides(
     hymns: list[str],
     scripture: str,
+    call_scripture: str,
     memorize: str,
     message: str,
     messager: str,
@@ -444,6 +446,8 @@ def mvccc_slides(
     slides.append(hymn[0])
 
     slides.append(Section("宣  召"))
+    if call_scripture:
+        slides.append(to_scripture(call_scripture))
 
     slides.append(Section("頌  讚"))
     for kw in hymns:
@@ -527,6 +531,7 @@ def main(argv):
     slides = mvccc_slides(
         hymns=FLAGS.hymns,
         scripture=FLAGS.scripture,
+        call_scripture=FLAGS.call_scripture,
         memorize=FLAGS.memorize,
         message=FLAGS.message,
         messager=FLAGS.messager,
