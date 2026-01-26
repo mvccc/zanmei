@@ -9,6 +9,7 @@ dependencies = [
   "aiodns",
   "aiohttp",
   "attrs",
+  "basedpyright>=1.37.2",
   "beautifulsoup4",
   "cattrs",
   "charset-normalizer",
