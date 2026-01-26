@@ -195,8 +195,8 @@ class Message:
     def add_to(self, ppt: Pptx, padding="\u3000\u3000") -> Pptx:
         slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_MESSAGE))
         body = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
-        left_margin = Inches(0.7)
-        top_margin = Inches(2.0)
+        left_margin = Inches(0.5)
+        top_margin = Inches(1.2)
         body.left = left_margin
         body.top = top_margin
         body.width = max(Inches(1), ppt.slide_width - left_margin * 2)
