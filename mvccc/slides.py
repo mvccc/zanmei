@@ -15,7 +15,7 @@ import attr
 from absl import app, flags, logging as log
 from pptx import Presentation
 from pptx.enum.shapes import PP_PLACEHOLDER
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.text import MSO_VERTICAL_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 
 from bible.index import parse_citations
@@ -262,6 +262,8 @@ class Hymn:
 
             slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN_LYRICS))
             paragraph_holder = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
+            if paragraph_holder.has_text_frame:
+                paragraph_holder.text_frame.vertical_anchor = MSO_VERTICAL_ANCHOR.MIDDLE
             if paragraph:
                 paragraph = [_format_lyrics_line(line) for line in paragraph]
             paragraph_holder.text = "\n".join(paragraph)
