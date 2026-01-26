@@ -225,7 +225,7 @@ class Hymn:
     title: str | None = attr.ib(default=None)
     number: str | None = attr.ib(default=None)
 
-    def add_to(self, ppt: Pptx, padding: str = "") -> Pptx:
+    def add_to(self, ppt: Pptx) -> Pptx:
         hymn_title = self.title or Path(self.filename).stem
         hymn_title = re.sub(r"\(\d+\)$", "", hymn_title).rstrip()
         hymn_title = re.sub(r"^\d+[_-]", "", hymn_title)
@@ -264,8 +264,6 @@ class Hymn:
             paragraph_holder = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
             if paragraph:
                 paragraph = [_format_lyrics_line(line) for line in paragraph]
-                if padding:
-                    paragraph[0] = padding + paragraph[0]
             paragraph_holder.text = "\n".join(paragraph)
             add_verse_footnote(slide, verse_marker, ppt)
 
