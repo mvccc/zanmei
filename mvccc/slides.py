@@ -32,7 +32,7 @@ flags.DEFINE_multi_string("hymns", [], "The hymns by congregation")
 flags.DEFINE_string("response", "", "The hymn after the teaching")
 flags.DEFINE_string("offering", "", "The hymn for the offering")
 
-flags.DEFINE_string("scripture", "", "The bible scriptures")
+flags.DEFINE_multi_string("scripture", [], "The bible scriptures")
 flags.DEFINE_string("call_scripture", "", "The calling scripture")
 flags.DEFINE_string("memorize", "", "The bible scripture to memorize")  # verse of the week
 
@@ -166,6 +166,12 @@ def _format_lyrics_line(line: str) -> str:
 
 def _normalize_scripture_text(text: str) -> str:
     return text.replace(" 神", "神").replace("\u3000神", "神")
+
+
+def _join_scripture_citations(citations: str | list[str]) -> str:
+    if isinstance(citations, str):
+        return citations.strip()
+    return ";".join(c.strip() for c in citations if c and c.strip())
 
 
 @attr.s
@@ -426,7 +432,7 @@ class Blank:
 
 def mvccc_slides(
     hymns: list[str],
-    scripture: str,
+    scripture: str | list[str],
     call_scripture: str,
     memorize: str,
     message: str,
@@ -436,6 +442,7 @@ def mvccc_slides(
     offering: str,
     communion: bool,
 ) -> list[Any]:
+    scripture = _join_scripture_citations(scripture)
     slides: list[Any] = [
         Message("""
 惟耶和華在他的聖殿中；
