@@ -173,7 +173,7 @@ class Prelude:
     message: str = attr.ib()
     picture: str = attr.ib()
 
-    def add_to(self, ppt: Pptx, padding="\u3000\u3000") -> Pptx:
+    def add_to(self, ppt: Pptx, padding="") -> Pptx:
         slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_PRELUDE))
         # Try TITLE first, fall back to BODY if not available
         try:
@@ -192,7 +192,7 @@ class Prelude:
 class Message:
     message: str = attr.ib()
 
-    def add_to(self, ppt: Pptx, padding="\u3000\u3000") -> Pptx:
+    def add_to(self, ppt: Pptx, padding="") -> Pptx:
         slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_MESSAGE))
         body = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
         left_margin = Inches(0.5)
@@ -201,6 +201,8 @@ class Message:
         body.top = top_margin
         body.width = max(Inches(1), ppt.slide_width - left_margin * 2)
         body.height = max(Inches(1), ppt.slide_height - top_margin * 2)
+        if body.has_text_frame:
+            body.text_frame.vertical_anchor = MSO_VERTICAL_ANCHOR.MIDDLE
 
         lines = self.message.splitlines()
         while lines and not lines[0].strip():
