@@ -16,6 +16,7 @@ from absl import app, flags, logging as log
 from pptx import Presentation
 from pptx.enum.shapes import PP_PLACEHOLDER
 from pptx.enum.text import MSO_VERTICAL_ANCHOR, PP_ALIGN
+from pptx.dml.color import RGBColor
 from pptx.util import Inches, Pt
 
 from bible.index import parse_citations
@@ -112,7 +113,16 @@ def _get_placeholder_by_type(container, placeholder_types: tuple[PP_PLACEHOLDER,
     raise ValueError(f"Could not find placeholder types {placeholder_types}. Available placeholder types: {available}")
 
 
-def add_verse_footnote(slide, verse_marker: str | None, ppt: Pptx) -> None:
+def _get_body_font_color(template_name: str):
+    """Get body text color based on template name."""
+    # Known template colors
+    if "modern_dark" in template_name.lower():
+        return RGBColor.from_string("F6C453")  # Gold
+    # Default to white for other dark templates
+    return RGBColor(255, 255, 255)
+
+
+def add_verse_footnote(slide, verse_marker: str | None, ppt: Pptx, font_color=None) -> None:
     verse_marker = (verse_marker or "").strip()
     if not verse_marker:
         return
@@ -132,6 +142,10 @@ def add_verse_footnote(slide, verse_marker: str | None, ppt: Pptx) -> None:
 
     for run in paragraph.runs:
         run.font.size = Pt(18)
+        if font_color:
+            run.font.color.rgb = font_color
+        else:
+            run.font.color.rgb = RGBColor(255, 255, 255)
 
     textbox.text_frame.margin_bottom = 0
     textbox.text_frame.margin_top = 0
@@ -155,7 +169,7 @@ def apply_font_style(text_frame, font_size: Pt | None = None, alignment: PP_ALIG
             run.font.size = font_size
 
 
-_PUNCTUATION = r"[，。；！？、：,.;!?:]"
+_PUNCTUATION = r"[，。；﹔！？、：,.;!?:]"
 
 
 def _format_lyrics_line(line: str) -> str:
@@ -276,7 +290,8 @@ class Hymn:
             if paragraph:
                 paragraph = [_format_lyrics_line(line) for line in paragraph]
             paragraph_holder.text = "\n".join(paragraph)
-            add_verse_footnote(slide, verse_marker, ppt)
+            font_color = _get_body_font_color(FLAGS.master_pptx)
+            add_verse_footnote(slide, verse_marker, ppt, font_color)
 
         return ppt
 

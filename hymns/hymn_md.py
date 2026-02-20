@@ -231,6 +231,7 @@ def md_to_pptx(md_path: str | Path, template_pptx: str = "mvccc_master_modern_da
     from mvccc.slides import (
         LAYOUT_NAME_HYMN_LYRICS,
         LAYOUT_NAME_HYMN_TITLE,
+        _get_body_font_color,
         _get_placeholder_by_type,
         _get_slide_layout,
         add_verse_footnote,
@@ -260,7 +261,8 @@ def md_to_pptx(md_path: str | Path, template_pptx: str = "mvccc_master_modern_da
         slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN_LYRICS))
         body = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
         body.text = " " + "\n".join(lyrics)
-        add_verse_footnote(slide, verse_marker, ppt)
+        font_color = _get_body_font_color(template_pptx)
+        add_verse_footnote(slide, verse_marker, ppt, font_color)
 
     return ppt
 
