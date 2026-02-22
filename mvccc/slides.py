@@ -14,9 +14,9 @@ from typing import Any
 import attr
 from absl import app, flags, logging as log
 from pptx import Presentation
+from pptx.dml.color import RGBColor
 from pptx.enum.shapes import PP_PLACEHOLDER
 from pptx.enum.text import MSO_VERTICAL_ANCHOR, PP_ALIGN
-from pptx.dml.color import RGBColor
 from pptx.util import Inches, Pt
 
 from bible.index import parse_citations
@@ -30,8 +30,8 @@ flags.DEFINE_string("master_pptx", "mvccc_master_keynote_blue.pptx", "The templa
 
 flags.DEFINE_string("choir", "", "The hymn by choir")
 flags.DEFINE_multi_string("hymns", [], "The hymns by congregation")
-flags.DEFINE_string("response", "", "The hymn after the teaching")
-flags.DEFINE_string("offering", "", "The hymn for the offering")
+flags.DEFINE_multi_string("response", [], "The hymn(s) after the teaching")
+flags.DEFINE_multi_string("offering", [], "The hymn(s) for the offering")
 
 flags.DEFINE_multi_string("scripture", [], "The bible scriptures")
 flags.DEFINE_string("call_scripture", "", "The calling scripture")
@@ -306,6 +306,16 @@ def search_hymn_md(keyword: str, basepath: Path | None = None) -> list[Hymn]:
     found = list(glob)
 
     if not found:
+        # Try matching with punctuation stripped from both keyword and filenames
+        punctuation = re.compile(r"[，。！？、；：「」『』（）\(\)\.,!?;:\s]")
+        stripped_keyword = punctuation.sub("", keyword)
+        found = [
+            p
+            for p in basepath.glob("**/*.md")
+            if stripped_keyword in punctuation.sub("", p.stem)
+        ]
+
+    if not found:
         interchangebles = [("你", "祢", "袮"), ("寶", "寳"), ("他", "祂"), ("于", "於"), ("牆", "墻")]
         for t in interchangebles:
             for w in t:
@@ -453,8 +463,8 @@ def mvccc_slides(
     message: str,
     messager: str,
     choir: str,
-    response: str,
-    offering: str,
+    response: list[str],
+    offering: list[str],
     communion: bool,
 ) -> list[Any]:
     scripture = _join_scripture_citations(scripture)
@@ -496,12 +506,12 @@ def mvccc_slides(
     slides.append(Teaching("信息", f"「{message}」", f"{messager}"))
 
     slides.append(Section("回  應"))
-    if response:
-        hymn = search_hymn_md(response)[0]
+    for kw in response:
+        hymn = search_hymn_md(kw)[0]
         slides.append(hymn)
 
-    if offering:
-        hymn = search_hymn_md(offering)[0]
+    for kw in offering:
+        hymn = search_hymn_md(kw)[0]
         slides.append(hymn)
 
     slides.append(Section("奉 獻 禱 告"))
