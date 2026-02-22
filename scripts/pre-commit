@@ -1,0 +1,54 @@
+#!/bin/bash
+#
+# Pre-commit hook: ensure non-empty, non-heading lines in processed/mvccc/*.md
+# end with two trailing spaces (markdown line break).
+
+# Get staged .md files under processed/mvccc/
+staged_md=$(git diff --cached --name-only --diff-filter=ACM | grep '^processed/mvccc/.*\.md$')
+
+if [ -z "$staged_md" ]; then
+    exit 0
+fi
+
+fixed=0
+for file in $staged_md; do
+    # Process: for non-empty lines that don't start with #, ensure trailing "  "
+    if python3 -c "
+import sys
+
+path = sys.argv[1]
+with open(path, 'r', encoding='utf-8') as f:
+    lines = f.readlines()
+
+changed = False
+new_lines = []
+for line in lines:
+    stripped = line.rstrip('\n').rstrip('\r')
+    # Non-empty, non-heading lines should end with two spaces
+    if stripped and not stripped.startswith('#'):
+        if not stripped.endswith('  '):
+            stripped = stripped.rstrip() + '  '
+            changed = True
+    new_lines.append(stripped)
+
+if changed:
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(new_lines) + '\n')
+    sys.exit(1)  # signal that file was modified
+sys.exit(0)
+" "$file" 2>/dev/null; then
+        : # file was fine
+    else
+        # File was auto-fixed, re-stage it
+        git add "$file"
+        fixed=$((fixed + 1))
+        echo "pre-commit: auto-fixed trailing spaces in $file"
+    fi
+done
+
+if [ $fixed -gt 0 ]; then
+    echo "pre-commit: fixed $fixed file(s). Changes have been staged. Please re-run git commit."
+    exit 1
+fi
+
+exit 0

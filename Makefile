@@ -163,10 +163,13 @@ uv-sync:
 uv-lock:
 	uv lock
 
-init: install-uv uv-sync download
+install-hooks:
+	ln -sf ../../scripts/pre-commit .git/hooks/pre-commit
+
+init: install-uv uv-sync download install-hooks
 
 .PHONY: init-fast
-init-fast: install-uv uv-sync
+init-fast: install-uv uv-sync install-hooks
 
 #-------------------------------------------------------------------------------
 # Docker yolo mode - sandbox for Claude Code
