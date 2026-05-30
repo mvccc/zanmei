@@ -32,6 +32,7 @@ flags.DEFINE_string("choir", "", "The hymn by choir")
 flags.DEFINE_multi_string("hymns", [], "The hymns by congregation")
 flags.DEFINE_multi_string("response", [], "The hymn(s) after the teaching")
 flags.DEFINE_multi_string("offering", [], "The hymn(s) for the offering")
+flags.DEFINE_multi_string("post_offering_sections", [], "Additional section slide(s) after the offering prayer")
 
 flags.DEFINE_multi_string("scripture", [], "The bible scriptures")
 flags.DEFINE_string("call_scripture", "", "The calling scripture")
@@ -309,11 +310,7 @@ def search_hymn_md(keyword: str, basepath: Path | None = None) -> list[Hymn]:
         # Try matching with punctuation stripped from both keyword and filenames
         punctuation = re.compile(r"[，。！？、；：「」『』（）\(\)\.,!?;:\s]")
         stripped_keyword = punctuation.sub("", keyword)
-        found = [
-            p
-            for p in basepath.glob("**/*.md")
-            if stripped_keyword in punctuation.sub("", p.stem)
-        ]
+        found = [p for p in basepath.glob("**/*.md") if stripped_keyword in punctuation.sub("", p.stem)]
 
     if not found:
         interchangebles = [("你", "祢", "袮"), ("寶", "寳"), ("他", "祂"), ("于", "於"), ("牆", "墻")]
@@ -465,6 +462,7 @@ def mvccc_slides(
     choir: str,
     response: list[str],
     offering: list[str],
+    post_offering_sections: list[str],
     communion: bool,
 ) -> list[Any]:
     scripture = _join_scripture_citations(scripture)
@@ -515,6 +513,9 @@ def mvccc_slides(
         slides.append(hymn)
 
     slides.append(Section("奉 獻 禱 告"))
+
+    for section in post_offering_sections:
+        slides.append(Section(section))
 
     if communion:
         slides.append(Section("聖  餐"))
@@ -572,6 +573,7 @@ def main(argv):
         choir=FLAGS.choir,
         response=FLAGS.response,
         offering=FLAGS.offering,
+        post_offering_sections=FLAGS.post_offering_sections,
         communion=FLAGS.communion,
     )
     master = Presentation(FLAGS.master_pptx)
