@@ -86,6 +86,17 @@ make slides SUNDAY=2025-01-12
 
 Do not generate the presentation before the user approves the flag file.
 
+When presenting the flag file for review, show its complete contents and explicitly verify every worship-program item:
+
+- `--call_scripture`: 宣召經文
+- `--scripture`: 讀經經文
+- `--memorize`: 本週金句
+- All choir, praise, response, and offering hymns, including requested verses
+- `--message` and `--messager`
+- Communion or other special sections, when present
+
+Do not treat `--memorize` as optional when the worship program contains a 本週金句. If the citation is unclear or absent, stop and ask the user instead of silently omitting it.
+
 **Flag File Format** (`services/YYYY-MM-DD.flags`):
 ```
 --choir=236_大哉聖哉耶穌尊名2
@@ -93,6 +104,7 @@ Do not generate the presentation before the user approves the flag file.
 --hymns=114_主曾離寳座
 --response=298_為主而活
 --offering=488-1_獻上感恩的心
+--call_scripture=詩篇100:1-5
 --scripture=馬太福音25:14-30
 --memorize=馬太福音25:23
 --message=今日教會所需要的人才
@@ -200,6 +212,7 @@ uv run pytest --capture=no --verbose -k test_name
 ### Required Flags
 
 - `--scripture`: Main scripture reading (e.g., "馬太福音25:14-30")
+- `--memorize`: Memory verse of the week when the worship program contains 本週金句
 - `--message`: Sermon title
 - `--messager`: Speaker name
 
@@ -209,7 +222,7 @@ uv run pytest --capture=no --verbose -k test_name
 - `--hymns`: Congregation hymns (can be specified multiple times)
 - `--response`: Response hymn after sermon
 - `--offering`: Offering hymn
-- `--memorize`: Memory verse of the week
+- `--call_scripture`: Call-to-worship scripture
 - `--communion`: Whether to include communion (true/false)
 
 ### Hymn Specification Format
