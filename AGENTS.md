@@ -68,17 +68,23 @@ zanmei/
 
 ### Creating Service Slides
 
-Generate a PowerPoint presentation for a service:
+Create and review the service flag file before generating a PowerPoint presentation:
 
 ```bash
-# For next Sunday (automatic)
-make pptx
+# 1. Create services/YYYY-MM-DD.flags from the worship program.
+# 2. Stop and ask the user to review and approve the flags file.
+# 3. After approval, generate the slides.
 
-# For specific date
-make pptx SUNDAY=2025-01-12
+# For next Sunday (automatic)
+make slides
+
+# For a specific date
+make slides SUNDAY=2025-01-12
 
 # Output: YYYY-MM-DD.pptx
 ```
+
+Do not generate the presentation before the user approves the flag file.
 
 **Flag File Format** (`services/YYYY-MM-DD.flags`):
 ```
@@ -214,6 +220,14 @@ Hymns can be specified as:
 2. **Number + Name**: `114_主曾離寳座` → Uses this exact name
 3. **Name only**: `坐在寶座上聖潔羔羊` → Searches by name
 
+Use `祢`, not `禰`, in new or edited service flags and hymn text.
+
+### Selecting Hymn Verses
+
+When the worship program specifies selected verses, use the existing complete hymn resource in the flag file. Do not create a duplicate Markdown or PowerPoint file with a verse list in its filename, such as `305_我時刻需要祢(1,2,4).md`.
+
+After `make slides` generates the presentation, hide the slides for omitted verses in the generated deck. Keep those slides in the file so the complete hymn resource remains reusable. For example, when verses 1, 2, and 4 are requested, hide every verse 3 lyric slide instead of deleting it or creating a reduced hymn resource.
+
 ---
 
 ## Important Constraints & Limitations
@@ -287,8 +301,8 @@ uv run python -m bible.scripture --bible_citations "約翰福音3:16"
 # Hymn downloading
 uv run python -m hymns.zanmei -v 1
 
-# Slide generation
-uv run python mvccc/slides.py --pptx=output.pptx --flagfile=services/2025-01-12.flags
+# Slide generation (only after the user approves the flags file)
+make slides SUNDAY=2025-01-12
 ```
 
 ---
