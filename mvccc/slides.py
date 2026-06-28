@@ -527,6 +527,8 @@ def mvccc_slides(
     slides.append(hymn)
 
     slides.append(Section("祝  福"))
+    hymn = search_hymn_md("願主賜福保佑你")[0]
+    slides.append(hymn)
     slides.append(Section("默  禱"))
     slides.append(Blank())
 

@@ -86,6 +86,12 @@ make slides SUNDAY=2025-01-12
 
 Do not generate the presentation before the user approves the flag file.
 
+Usually the final service package needs both PowerPoint and Keynote files:
+
+- Generate or recreate `YYYY-MM-DD.pptx` with `make slides SUNDAY=YYYY-MM-DD`.
+- Also create the matching `YYYY-MM-DD.key` from the generated PPTX.
+- If selected hymn verses are omitted, hide those slides in the generated deck and preserve the same hidden-slide state in both files.
+
 When presenting the flag file for review, show its complete contents and explicitly verify every worship-program item:
 
 - `--call_scripture`: 宣召經文
