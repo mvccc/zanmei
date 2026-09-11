@@ -1,0 +1,21 @@
+# MVCCC 主日敬拜 2026-08-23
+# 信息: 活出你生命的素質 - 關國瑞牧師
+# Choir hymn 我奇妙救主 uses verses 1, 2, and 4; hide verse 3 slides after generation.
+# Response hymn 我一生求主管理 uses verses 1, 2, and 4; hide verse 3 slide after generation.
+# Insert the sermon-outline DOCX content as slides immediately after the message slide.
+
+--choir=263_我奇妙救主
+
+--hymns=002_你真偉大
+--hymns=066_我知誰掌管明天
+--hymns=046_天父必看顧你
+
+--response=329_信靠順服
+--response=291_我一生求主管理
+
+--call_scripture=詩篇24:1-6
+--scripture=創世記13:1-18
+--memorize=羅馬書4:17
+
+--message=活出你生命的素質
+--messager=關國瑞牧師
