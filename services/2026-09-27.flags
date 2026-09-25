@@ -1,0 +1,18 @@
+# MVCCC 主日敬拜 2026-09-27
+# Source: 2026-09-27 主日敬拜程序 Rev 0.1.pdf; call to worship supplied by Paul.
+# 每時每刻: verses 1, 2, 3; hide verse 4 after generation.
+# 我一生求主管理: verses 1, 4; hide verses 2, 3 after generation.
+# 祢的恩典夠我用 and 唯有基督: lyrics supplied by the user.
+
+--choir=048_每時每刻
+--hymns=497_尊貴的主
+--hymns=179_我深信在那各各他山頂
+--hymns=祢的恩典夠我用
+--response=唯有基督
+--offering=291_我一生求主管理
+--call_scripture=詩篇96:5-7
+--scripture=使徒行傳17:16-31
+--memorize=使徒行傳17:24-25
+--message=偶像叢中看見真神
+--messager=王向紅長老
+--communion=false
