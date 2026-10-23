@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 from collections.abc import Generator
 from datetime import date, timedelta
 from pathlib import Path
@@ -16,7 +17,7 @@ from absl import app, flags, logging as log
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import PP_PLACEHOLDER
-from pptx.enum.text import MSO_VERTICAL_ANCHOR, PP_ALIGN
+from pptx.enum.text import MSO_AUTO_SIZE, MSO_VERTICAL_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 
 from bible.index import parse_citations
@@ -242,6 +243,17 @@ class Message:
         return ppt
 
 
+def hymn_font_size(pages: list[list[str]], width_pt: float, height_pt: float, maximum: float = 76) -> int:
+    """Estimate a conservative shared size, allowing extra space for CJK font metrics."""
+    pages = [page for page in pages if page]
+    if not pages:
+        return int(maximum)
+    longest = max(
+        sum(1 if unicodedata.east_asian_width(char) in "WF" else 0.6 for char in line) for page in pages for line in page
+    )
+    return max(1, int(min(maximum, width_pt / max(1, longest) / 1.05, height_pt / max(map(len, pages)) / 1.5)))
+
+
 @attr.s
 class Hymn:
     filename: str = attr.ib()
@@ -280,6 +292,17 @@ class Hymn:
         except ValueError:
             pass
 
+        layout = _get_slide_layout(ppt, LAYOUT_NAME_HYMN_LYRICS)
+        layout_body = _get_placeholder_by_type(layout, (PP_PLACEHOLDER.BODY,))
+        frame = layout_body.text_frame
+        defaults = layout_body._element.xpath(".//a:defRPr[@sz]")
+        maximum = int(defaults[0].get("sz")) / 100 if defaults else 76
+        font_size = hymn_font_size(
+            [[_format_lyrics_line(line) for line in page] for _, page in self.lyrics if any(line.strip() for line in page)],
+            (layout_body.width - frame.margin_left - frame.margin_right) / 12700,
+            (layout_body.height - frame.margin_top - frame.margin_bottom) / 12700,
+            maximum,
+        )
         for verse_marker, paragraph in self.lyrics:
             if not paragraph or not any(line.strip() for line in paragraph):
                 continue
@@ -291,6 +314,16 @@ class Hymn:
             if paragraph:
                 paragraph = [_format_lyrics_line(line) for line in paragraph]
             paragraph_holder.text = "\n".join(paragraph)
+            text_frame = paragraph_holder.text_frame
+            text_frame.auto_size = MSO_AUTO_SIZE.NONE
+            text_frame.word_wrap = False
+            for text_paragraph in text_frame.paragraphs:
+                text_paragraph.font.size = Pt(font_size)
+                text_paragraph.line_spacing = Pt(font_size * 1.25)
+                text_paragraph.space_before = Pt(0)
+                text_paragraph.space_after = Pt(0)
+                for run in text_paragraph.runs:
+                    run.font.size = Pt(font_size)
             font_color = _get_body_font_color(FLAGS.master_pptx)
             add_verse_footnote(slide, verse_marker, ppt, font_color)
 
