@@ -1,13 +1,13 @@
 # MVCCC 主日敬拜 2026-10-25
-# Use lyrics from slides 1-24 of 20261025_worship.key for the praise songs.
-# Use lyrics from slides 25-37 for response/offering; retain the church blue template.
-# This preserves the leader's lyrics, repeats, and 主我願像祢 verses 1, 2, 5.
+# Lyrics are stored in processed/mvccc; @ lists Markdown lyric pages in singing order.
+# Repeat the final chorus of 祢的信實廣大.
+# 主我願像祢: chorus first, then verses 1, 2, 5; omitted pages remain hidden.
 # Retain the original closing 默禱 section.
-# Reflow lyrics to 3-5 lines per slide with a uniform font size; restore 我要向世人歌唱祢的恩典.
+# Lyrics use 3-5 lines per slide with template auto-fit; restore 我要向世人歌唱祢的恩典.
 
 --choir=397_在花園裡
---hymns=007
---hymns=342_主，我願像祢
+--hymns=007_你的信實廣大@1,2,3,4,5,6,6
+--hymns=342_主，我願像祢@2,1,2,3,4,9,10
 --hymns=盡情地敬拜
 --response=我的救贖者活著
 --offering=3402_獻上活祭

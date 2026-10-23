@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import re
-import unicodedata
 from collections.abc import Generator
 from datetime import date, timedelta
 from pathlib import Path
@@ -243,23 +242,13 @@ class Message:
         return ppt
 
 
-def hymn_font_size(pages: list[list[str]], width_pt: float, height_pt: float, maximum: float = 76) -> int:
-    """Estimate a conservative shared size, allowing extra space for CJK font metrics."""
-    pages = [page for page in pages if page]
-    if not pages:
-        return int(maximum)
-    longest = max(
-        sum(1 if unicodedata.east_asian_width(char) in "WF" else 0.6 for char in line) for page in pages for line in page
-    )
-    return max(1, int(min(maximum, width_pt / max(1, longest) / 1.05, height_pt / max(map(len, pages)) / 1.5)))
-
-
 @attr.s
 class Hymn:
     filename: str = attr.ib()
     lyrics: list[tuple[str, list[str]]] = attr.ib()
     title: str | None = attr.ib(default=None)
     number: str | None = attr.ib(default=None)
+    page_order: list[int] | None = attr.ib(default=None)
 
     def add_to(self, ppt: Pptx) -> Pptx:
         hymn_title = self.title or Path(self.filename).stem
@@ -294,20 +283,22 @@ class Hymn:
 
         layout = _get_slide_layout(ppt, LAYOUT_NAME_HYMN_LYRICS)
         layout_body = _get_placeholder_by_type(layout, (PP_PLACEHOLDER.BODY,))
-        frame = layout_body.text_frame
+        # Keynote imports placeholder autosizing from the layout as well as the slide.
+        layout_body.text_frame.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
         defaults = layout_body._element.xpath(".//a:defRPr[@sz]")
-        maximum = int(defaults[0].get("sz")) / 100 if defaults else 76
-        font_size = hymn_font_size(
-            [[_format_lyrics_line(line) for line in page] for _, page in self.lyrics if any(line.strip() for line in page)],
-            (layout_body.width - frame.margin_left - frame.margin_right) / 12700,
-            (layout_body.height - frame.margin_top - frame.margin_bottom) / 12700,
-            maximum,
-        )
-        for verse_marker, paragraph in self.lyrics:
+        font_size = int(defaults[0].get("sz")) / 100 if defaults else 76
+        order = self.page_order if self.page_order is not None else list(range(1, len(self.lyrics) + 1))
+        if not order or any(page < 1 or page > len(self.lyrics) for page in order):
+            raise ValueError(f"Invalid lyric page order for {self.filename}: {order}")
+        omitted = [page for page in range(1, len(self.lyrics) + 1) if page not in order]
+        for page, hidden in [(page, False) for page in order] + [(page, True) for page in omitted]:
+            verse_marker, paragraph = self.lyrics[page - 1]
             if not paragraph or not any(line.strip() for line in paragraph):
                 continue
 
             slide = ppt.slides.add_slide(_get_slide_layout(ppt, LAYOUT_NAME_HYMN_LYRICS))
+            if hidden:
+                slide._element.set("show", "0")
             paragraph_holder = _get_placeholder_by_type(slide, (PP_PLACEHOLDER.BODY,))
             if paragraph_holder.has_text_frame:
                 paragraph_holder.text_frame.vertical_anchor = MSO_VERTICAL_ANCHOR.MIDDLE
@@ -315,15 +306,17 @@ class Hymn:
                 paragraph = [_format_lyrics_line(line) for line in paragraph]
             paragraph_holder.text = "\n".join(paragraph)
             text_frame = paragraph_holder.text_frame
-            text_frame.auto_size = MSO_AUTO_SIZE.NONE
+            text_frame.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
             text_frame.word_wrap = False
             for text_paragraph in text_frame.paragraphs:
                 text_paragraph.font.size = Pt(font_size)
+                text_paragraph.alignment = PP_ALIGN.CENTER
                 text_paragraph.line_spacing = Pt(font_size * 1.25)
                 text_paragraph.space_before = Pt(0)
                 text_paragraph.space_after = Pt(0)
                 for run in text_paragraph.runs:
                     run.font.size = Pt(font_size)
+                    run.font.color.rgb = _get_body_font_color(FLAGS.master_pptx)
             font_color = _get_body_font_color(FLAGS.master_pptx)
             add_verse_footnote(slide, verse_marker, ppt, font_color)
 
@@ -334,6 +327,12 @@ def search_hymn_md(keyword: str, basepath: Path | None = None) -> list[Hymn]:
     if basepath is None:
         basepath = Path(PROCESSED)
 
+    keyword, separator, selection = keyword.partition("@")
+    page_order = None
+    if separator:
+        if not re.fullmatch(r"[1-9]\d*(,[1-9]\d*)*", selection):
+            raise ValueError(f"Invalid hymn page order: {selection!r}; expected @1,2,3")
+        page_order = [int(page) for page in selection.split(",")]
     keyword = keyword.replace(".pptx", "").replace(".md", "")
     ptn = f"**/*{keyword}*.md"
     glob = basepath.glob(ptn)
@@ -381,7 +380,9 @@ def search_hymn_md(keyword: str, basepath: Path | None = None) -> list[Hymn]:
         if number_match:
             hymn_number = number_match.group(1)
 
-        hymn = Hymn(path.name, lyrics, title=hymn_title, number=hymn_number)
+        if page_order and max(page_order) > len(lyrics):
+            raise ValueError(f"Page order exceeds the {len(lyrics)} lyric pages in {path}")
+        hymn = Hymn(path.name, lyrics, title=hymn_title, number=hymn_number, page_order=page_order)
         log.info(f"keyword={keyword}, lyrics=\n{pformat(hymn.lyrics)}")
         result.append(hymn)
 

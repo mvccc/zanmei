@@ -25,6 +25,28 @@ $ make slides SUNDAY=2019-03-24
 $ open 2019-03-24.pptx
 ```
 
+### Reusable Song Arrangements
+
+Keep complete lyrics in `processed/mvccc/*.md`. Each `##` section is one lyric
+slide; edit its line breaks there, preferably keeping 3-5 lines per page.
+The generator preserves the template's nominal font size and enables text auto-fit
+to keep longer pages within their text boxes. Different songs have separate title slides.
+
+An optional `@` suffix on any hymn flag lists one-based Markdown page numbers
+in singing order. Repeated numbers repeat a page; omitted pages are appended to
+that song as hidden slides, preserving the complete resource. Without a suffix,
+all pages appear once in their original order.
+
+```text
+--hymns=007_你的信實廣大@1,2,3,4,5,6,6
+--hymns=342_主，我願像祢@2,1,2,3,4,9,10
+```
+
+After reviewing the service flags, run `make slides SUNDAY=YYYY-MM-DD`.
+No source Keynote file or post-generation lyric replacement script is needed.
+To create the matching `.key`, open the generated PPTX in Keynote and save it;
+verify that skipped slides remain skipped and text auto-shrinking is enabled.
+
 #### PPT轉純文本
 
 ```bash
